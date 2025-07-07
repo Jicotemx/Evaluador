@@ -17,7 +17,7 @@ socketio = SocketIO(app)
 HoraEmpieza=13
 MinutoEmpieza=31
 minutes=HoraEmpieza*60+MinutoEmpieza
-START_TIME = datetime.now().replace(second=0, microsecond=0) + timedelta(minutes)  # Empieza en 1 minuto desde que corre
+START_TIME = datetime.now()#.replace(second=0, microsecond=0) + timedelta(minutes)  # Empieza en 1 minuto desde que corre
 DURATION = timedelta(minutes=20)  # Duración del concurso
 LOCAL_TIMEZONE = pytz.timezone("America/Mexico_City")  # Cambia según tu ubicación
 

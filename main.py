@@ -14,13 +14,13 @@ socketio = SocketIO(app)
 # =====================
 # CONFIGURACIÓN
 # =====================
-anno=2025; dia=7; mes=7;  hora=16; minuto=40
+anno=2025; dia=7; mes=7;  hora=17; minuto=40
 #START_TIME = datetime.now()#.replace(second=0, microsecond=0) + timedelta(minutes)  # Empieza en 1 minuto desde que corre
 #START_TIME = datetime(2025,07,07,15,10)
 #START_TIME = datetime(year=anno, month=mes, day=dia, hour=hora, minute=minuto, second=0, microsecond=0)
 DURATION = timedelta(minutes=20)  # Duración del concurso
 LOCAL_TIMEZONE = pytz.timezone("America/Mexico_City")  # Cambia según tu ubicación
-START_TIME = LOCAL_TIMEZONE.localize(datetime(year=2025, month=7, day=7, hour=15, minute=50, second=0, microsecond=0))
+START_TIME = LOCAL_TIMEZONE.localize(datetime(year=anno, month=mes, day=dia, hour=hora, minute=minuto, second=0, microsecond=0))
 # Lista de problemas
 problems = {
     "A": 42,

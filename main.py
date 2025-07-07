@@ -14,12 +14,12 @@ socketio = SocketIO(app)
 # =====================
 # CONFIGURACIÓN
 # =====================
-Anno=2025; 
+anno=2025; dia=07; mes=07;  hora=15; minuto=59
 MinutoEmpieza=31
 minutes=HoraEmpieza*60+MinutoEmpieza
 #START_TIME = datetime.now()#.replace(second=0, microsecond=0) + timedelta(minutes)  # Empieza en 1 minuto desde que corre
 #START_TIME = datetime(2025,07,07,15,10)
-#START_TIME = datetime(year=2025, month=7, day=7, hour=15, minute=20, second=0, microsecond=0)
+#START_TIME = datetime(year=anno, month=mes, day=dia, hour=hora, minute=minuto, second=0, microsecond=0)
 DURATION = timedelta(minutes=20)  # Duración del concurso
 LOCAL_TIMEZONE = pytz.timezone("America/Mexico_City")  # Cambia según tu ubicación
 START_TIME = LOCAL_TIMEZONE.localize(datetime(year=2025, month=7, day=7, hour=15, minute=50, second=0, microsecond=0))

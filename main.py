@@ -7,6 +7,7 @@ from flask import Flask, render_template, request, jsonify
 from flask_socketio import SocketIO
 from datetime import datetime, timedelta
 import pytz
+import re
 
 app = Flask(__name__)
 socketio = SocketIO(app)
@@ -36,6 +37,22 @@ participants = {}  # nombre -> info
 # =====================
 # FUNCIONES AUXILIARES
 # =====================
+
+def cargar_problemas_desde_latex(archivo):
+    problemas = {}
+    with open(archivo, encoding="utf-8") as f:
+        for line in f:
+            match = re.match(r"\\problem\{(.*?)\}\{(.*?)\}\{(.*?)\}", line.strip())
+            if match:
+                pid, enunciado, respuesta = match.groups()
+                problemas[pid] = {
+                    "enunciado": enunciado,
+                    "respuesta": respuesta.strip()
+                }
+    return problemas
+
+problems = cargar_problemas_desde_latex("problemas.tex")
+
 
 def get_status():
     now = datetime.now(LOCAL_TIMEZONE)

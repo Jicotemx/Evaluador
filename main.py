@@ -14,7 +14,7 @@ socketio = SocketIO(app)
 # =====================
 # CONFIGURACIÓN
 # =====================
-HoraEmpieza=13
+Anno=2025; 
 MinutoEmpieza=31
 minutes=HoraEmpieza*60+MinutoEmpieza
 #START_TIME = datetime.now()#.replace(second=0, microsecond=0) + timedelta(minutes)  # Empieza en 1 minuto desde que corre
@@ -47,7 +47,7 @@ def get_status():
         return "running"
 
 def get_elapsed_time():
-    now = datetime.now()
+    now = datetime.now(LOCAL_TIMEZONE)
     return max((now - START_TIME).total_seconds(), 0)
 
 def register(name):
@@ -68,8 +68,9 @@ def register(name):
 @app.route("/")
 def index():
     status = get_status()
-    start_time_str = START_TIME.astimezone(LOCAL_TIMEZONE).strftime("%H:%M:%S")
-    return render_template("index.html", status=status, start_time=start_time_str, duration=DURATION.seconds)
+    start_time_iso = START_TIME.isoformat()
+    duration_seconds = int(DURATION.total_seconds())
+    return render_template("index.html", status=status, start_time_iso=start_time_iso, duration=duration_seconds)
 
 @app.route("/submit", methods=["POST"])
 def submit():

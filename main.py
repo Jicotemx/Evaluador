@@ -52,6 +52,8 @@ def get_elapsed_time():
     now = datetime.now(LOCAL_TIMEZONE)
     return max((now - START_TIME).total_seconds(), 0)
 
+participants = {}
+
 def register(name):
     if name not in participants:
         participants[name] = {
@@ -62,6 +64,18 @@ def register(name):
             "score": 0,
             "penalty": 0
         }
+
+@app.route("/register", methods=["POST"])
+def register_route():
+    name = request.form.get("name", "").strip()
+    if not name:
+        return jsonify({"error": "Nombre requerido"}), 400
+    register(name)
+    return jsonify({"success": True})
+
+@app.route("/participants")
+def get_participants():
+    return jsonify(list(participants.keys()))
 
 # =====================
 # RUTAS PRINCIPALES

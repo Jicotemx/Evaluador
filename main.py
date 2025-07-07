@@ -1,3 +1,6 @@
+import eventlet
+eventlet.monkey_patch()
+
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit, disconnect, join_room, leave_room, send
 import time
@@ -80,8 +83,7 @@ def update_ranking():
     socketio.emit('ranking', rankings)
 
 
-import eventlet
-eventlet.monkey_patch()
+
 
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0', port=81, debug=True, use_reloader=False)

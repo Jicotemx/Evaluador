@@ -22,7 +22,7 @@ minutes=HoraEmpieza*60+MinutoEmpieza
 #START_TIME = datetime(year=2025, month=7, day=7, hour=15, minute=20, second=0, microsecond=0)
 DURATION = timedelta(minutes=20)  # Duración del concurso
 LOCAL_TIMEZONE = pytz.timezone("America/Mexico_City")  # Cambia según tu ubicación
-START_TIME = LOCAL_TIMEZONE.localize(datetime(2025, 1, 2, 16, 35, 0, 0))
+START_TIME = LOCAL_TIMEZONE.localize(datetime(year=2025, month=7, day=7, hour=15, minute=20, second=0, microsecond=0))
 # Lista de problemas
 problems = {
     "A": 42,

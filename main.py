@@ -22,7 +22,7 @@ minutes=HoraEmpieza*60+MinutoEmpieza
 #START_TIME = datetime(year=2025, month=7, day=7, hour=15, minute=20, second=0, microsecond=0)
 DURATION = timedelta(minutes=20)  # Duración del concurso
 LOCAL_TIMEZONE = pytz.timezone("America/Mexico_City")  # Cambia según tu ubicación
-START_TIME = LOCAL_TIMEZONE.localize(datetime(year=2025, month=7, day=7, hour=15, minute=20, second=0, microsecond=0))
+START_TIME = LOCAL_TIMEZONE.localize(datetime(year=2025, month=7, day=7, hour=15, minute=50, second=0, microsecond=0))
 # Lista de problemas
 problems = {
     "A": 42,
@@ -38,7 +38,7 @@ participants = {}  # nombre -> info
 # =====================
 
 def get_status():
-    now = datetime.now()
+    now = datetime.now(LOCAL_TIMEZONE)
     if now < START_TIME:
         return "before"
     elif now > START_TIME + DURATION:

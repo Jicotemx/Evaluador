@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Concurso Numérico en Vivo</title>
+</head>
+<body>
+  <h1>Concurso Numérico 🧮</h1>
+
+  <label>Nombre: <input id="name" /></label>
+  <button onclick="join()">Unirse</button>
+
+  <h2>Enunciados de los problemas</h2>
+  <ol>
+    <li>Problema 1: ¿Cuál es la suma de los primeros 100 números naturales?</li>
+    <li>Problema 2: ¿Cuál es el producto de los primeros 5 números primos?</li>
+    <li>Problema 3: ¿Cuánto es 3.14 × 2?</li>
+    <!-- Agrega hasta el número de problemas que configures -->
+  </ol>
+
+  
+  <form id="form" onsubmit="submitAll(); return false;">
+    {% for i in range(1, num + 1) %}
+    <div>
+      Problema {{ i }}: <input name="p{{ i }}" />
+    </div>
+    {% endfor %}
+    <button type="submit">Enviar respuestas</button>
+  </form>
+
+  <table border="1" id="rank">
+    <tr>
+      <th>Nombre</th>
+      <th>Acertados</th>
+      <th>Intentos totales</th>
+      <th>Tiempo + penalidad (s)</th>
+      <th>Problemas resueltos</th>
+    </tr>
+  </table>
+
+
+
+
+
+  
+  <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
+  <script>
+    let socket = io();
+    let name = "";
+
+    function join() {
+      name =
+        document.getElementById("name").value.trim() ||
+        "Anónimo_" + Math.floor(Math.random() * 1000);
+      alert("Bienvenido " + name);
+    }
+
+    function submitAll() {
+      Array.from(document.getElementById("form").elements).forEach((el) => {
+        if (el.name && el.value) {
+          socket.emit("submit", { name, problem: el.name, answer: el.value });
+        }
+      });
+    }
+
+    socket.on("ranking", (data) => {
+      const t = document.getElementById("rank");
+      t.innerHTML =
+        "<tr><th>Nombre</th><th>Acertados</th><th>Intentos totales</th><th>Tiempo + penalidad (s)</th><th>Problemas resueltos</th></tr>";
+      data.forEach((r) => {
+        const row = t.insertRow();
+        row.insertCell().innerText = r.name;
+        row.insertCell().innerText = r.solved;
+        row.insertCell().innerText = r.attempts;
+        row.insertCell().innerText = r.time;
+        row.insertCell().innerText = r.solved_problems;
+      });
+    });
+
+  </script>
+</body>
+</html>

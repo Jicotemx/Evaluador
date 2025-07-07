@@ -68,7 +68,7 @@ def index():
     status = get_status()
     start_time_iso = START_TIME.isoformat()
     duration_seconds = int(DURATION.total_seconds())
-    return render_template("index.html", status=status, start_time_iso=start_time_iso, duration=duration_seconds)
+    return render_template("index.html", status=status, start_time_iso=start_time_iso, duration=duration_seconds,problems=problems)
 
 @app.route("/submit", methods=["POST"])
 def submit():

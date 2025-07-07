@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8" />
-    <title>Evaluador ICPC Mejorado</title>
+    <title>Evaluador ICPC Mejorado 1619</title>
     <style>
         body { font-family: Arial, sans-serif; max-width: 900px; margin: auto; padding: 20px; }
         h1 { text-align: center; }
@@ -58,6 +58,8 @@
     const timerElem = document.getElementById("timer");
     const form = document.getElementById("submitForm");
     const rankingBody = document.querySelector("#rankingTable tbody");
+
+     // Estas variables vienen desde Flask
     const startTimeStr = "{{ start_time_iso }}"; // ISO 8601 string enviado desde Flask
     const startTime = new Date(startTimeStr);
     const durationSeconds = {{ duration }};
@@ -218,6 +220,9 @@
     }
 
     window.onload = init;
+
+    console.log("startTimeStr:", startTimeStr);
+    console.log("durationSeconds:", durationSeconds);
 </script>
 </body>
 </html>

@@ -9,6 +9,18 @@
 </head>
 <body>
 
+  <!-- Contenido de la página -->
+
+  <div>
+    <select id="problemSelect" onchange="mostrarEnunciado()">
+      {% for pid in problems %}
+        <option value="{{ pid }}">{{ pid }}</option>
+      {% endfor %}
+    </select>
+    <div id="enunciado" style="margin-top:1em; font-size:18px;"></div>
+  </div>
+
+  
 <h1>Evaluador Concurso</h1>
 
 <div>
@@ -60,6 +72,20 @@ const registerBtn = document.getElementById("registerBtn");
 const registerMsg = document.getElementById("registerMsg");
 const nameInput = document.getElementById("nameInput");
 
+    const enunciados = {
+      {% for pid, data in problems.items() %}
+        "{{ pid }}": `{{ data["enunciado"] }}`,
+      {% endfor %}
+    };
+
+    function mostrarEnunciado() {
+      const pid = document.getElementById("problemSelect").value;
+      document.getElementById("enunciado").innerHTML = enunciados[pid];
+      MathJax.typeset();  // actualiza MathJax
+    }
+
+
+  
 function secondsToHMS(seconds) {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
@@ -158,6 +184,7 @@ setInterval(() => {
 
 updateTimer();
 loadParticipants();
+mostrarEnunciado();  
 </script>
 
 </body>

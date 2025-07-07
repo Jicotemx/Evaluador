@@ -30,6 +30,10 @@ problems = {
 
 # Almacén de resultados y participantes
 participants = {}  # nombre -> info
+@app.route("/participants")
+def get_participants():
+    return jsonify(list(participants.keys()))
+
 
 # =====================
 # FUNCIONES AUXILIARES

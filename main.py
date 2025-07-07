@@ -1,89 +1,186 @@
-import eventlet
-eventlet.monkey_patch()
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <title>Evaluador ICPC Mejorado</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 900px; margin: auto; padding: 20px; }
+        h1 { text-align: center; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+        th { background-color: #f4f4f4; }
+        #statusMsg { font-size: 1.2em; margin-bottom: 10px; text-align: center; }
+        #timer { font-weight: bold; font-size: 1.4em; margin-bottom: 20px; text-align: center; }
+        .disabled { opacity: 0.5; pointer-events: none; }
+        .correct { color: green; font-weight: bold; }
+        .wrong { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Evaluador ICPC Mejorado</h1>
+    <div id="statusMsg"></div>
+    <div id="timer"></div>
 
-from flask import Flask, render_template, request
-from flask_socketio import SocketIO, emit, disconnect, join_room, leave_room, send
-import time
-import threading
+    <form id="submitForm">
+        <label>Nombre: <input type="text" id="name" required /></label>
+        <label>Problema:
+            <select id="problem" required>
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="C">C</option>
+            </select>
+        </label>
+        <label>Respuesta: <input type="text" id="answer" required /></label>
+        <button type="submit">Enviar</button>
+    </form>
 
-app = Flask(__name__)
-app.config['SECRET_KEY'] = 'muy-secreto'
-socketio = SocketIO(app, cors_allowed_origins="*")
+    <table id="rankingTable">
+        <thead>
+            <tr>
+                <th>Participante</th>
+                <th>Puntaje</th>
+                <th>Penalización</th>
+                <th>A</th>
+                <th>B</th>
+                <th>C</th>
+                <th>Intentos A</th>
+                <th>Intentos B</th>
+                <th>Intentos C</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Se llena dinámicamente -->
+        </tbody>
+    </table>
 
-NUM_PROBLEMS = 3
-correct = {"p1":"10", "p2":"22","p3":"33"
-   # f"p{i}": "0" for i in range(1, NUM_PROBLEMS + 1)
-   # correct = {"10", "21", "5"}
-}
-# Cambia "0" por tus respuestas reales, ejemplo:
-# correct = {"p1":"3.14", "p2":"42", ...}
+<script>
+    const statusMsg = document.getElementById("statusMsg");
+    const timerElem = document.getElementById("timer");
+    const form = document.getElementById("submitForm");
+    const rankingBody = document.querySelector("#rankingTable tbody");
 
-students = {}
-lock = threading.Lock()
+    let status = "";
+    let startTime = null;
+    let durationSeconds = null;
 
-@app.route('/')
-def index():
-    return render_template('index.html', num=NUM_PROBLEMS)
+    function secondsToHMS(seconds) {
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = Math.floor(seconds % 60);
+        return `${h.toString().padStart(2,"0")}:${m.toString().padStart(2,"0")}:${s.toString().padStart(2,"0")}`;
+    }
 
-@socketio.on('submit')
-def handle_submit(data):
-    sid = request.sid
-    name = data['name']
-    prob = data['problem']
-    ans = data['answer']
-
-    with lock:
-        s = students.setdefault(sid, {
-            'name': name,
-            'start_time': time.time(),
-            'penalty': 0,
-            'scores': {},          # {problem: time_of_correct}
-            'attempts': {},        # {problem: count_attempts}
-        })
-
-        # Registrar intento
-        s['attempts'][prob] = s['attempts'].get(prob, 0) + 1
-
-        # Si ya acertó ese problema, no reevalúa
-        if prob in s['scores']:
-            return
-
-        # Comparar respuesta
-        try:
-            if abs(float(correct[prob]) - float(ans)) <= 1e-6:
-                s['scores'][prob] = time.time()
-            else:
-                s['penalty'] += 20 * 60  # 20 minutos penalización por error
-        except:
-            pass
-
-        update_ranking()
-
-def update_ranking():
-    arr = []
-    for sid, s in students.items():
-        solved = len(s['scores'])
-        total_time = sum(s['scores'].values()) - s['start_time'] if solved else 0
-        total = total_time + s['penalty']
-        attempts_total = sum(s['attempts'].values())
-        solved_list = sorted(s['scores'].keys())  # lista como ['p1', 'p3']
-        arr.append((sid, s['name'], solved, attempts_total, total, solved_list))
-
-    arr.sort(key=lambda x: (-x[2], x[4], x[3]))
-    rankings = [
-        {
-            'name': n,
-            'solved': sol,
-            'attempts': att,
-            'time': int(t),
-            'solved_problems': ', '.join(solved_list)
+    async function fetchStatus() {
+        try {
+            const res = await fetch("/status");
+            const data = await res.json();
+            status = data.status;
+            const elapsed = Math.floor(data.time);
+            return { status, elapsed };
+        } catch(e) {
+            statusMsg.textContent = "Error conectando con el servidor.";
+            return null;
         }
-        for _, n, sol, att, t, solved_list in arr
-    ]
-    socketio.emit('ranking', rankings)
+    }
 
+    async function fetchRanking() {
+        try {
+            const res = await fetch("/ranking");
+            const data = await res.json();
+            return data;
+        } catch(e) {
+            console.error("Error al cargar ranking", e);
+            return [];
+        }
+    }
 
+    function updateFormAndStatus(status, elapsed) {
+        if(status === "before") {
+            statusMsg.textContent = "El concurso comenzará pronto.";
+            timerElem.textContent = `Tiempo para inicio: ${secondsToHMS(Math.max(0, Math.floor((startTimeEpoch - Date.now()/1000))))}`;
+            form.classList.add("disabled");
+        } else if(status === "running") {
+            statusMsg.textContent = "Concurso en curso";
+            timerElem.textContent = `Tiempo transcurrido: ${secondsToHMS(elapsed)}`;
+            form.classList.remove("disabled");
+        } else if(status === "after") {
+            statusMsg.textContent = "Concurso finalizado.";
+            timerElem.textContent = "";
+            form.classList.add("disabled");
+        }
+    }
 
+    async function updateRankingTable() {
+        const ranking = await fetchRanking();
+        rankingBody.innerHTML = "";
+        for(const p of ranking) {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td>${p.name}</td>
+                <td>${p.score}</td>
+                <td>${p.penalty}</td>
+                <td class="${p.status.A === '✔' ? 'correct' : p.status.A === '✖' ? 'wrong' : ''}">${p.status.A || ''}</td>
+                <td class="${p.status.B === '✔' ? 'correct' : p.status.B === '✖' ? 'wrong' : ''}">${p.status.B || ''}</td>
+                <td class="${p.status.C === '✔' ? 'correct' : p.status.C === '✖' ? 'wrong' : ''}">${p.status.C || ''}</td>
+                <td>${p.attempts.A}</td>
+                <td>${p.attempts.B}</td>
+                <td>${p.attempts.C}</td>
+            `;
+            rankingBody.appendChild(tr);
+        }
+    }
 
-if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=81, debug=True, use_reloader=False)
+    form.addEventListener("submit", async e => {
+        e.preventDefault();
+        if(form.classList.contains("disabled")) return;
+
+        const name = document.getElementById("name").value.trim();
+        const problem = document.getElementById("problem").value;
+        const answer = document.getElementById("answer").value.trim();
+
+        if(!name || !answer) return alert("Completa todos los campos.");
+
+        const res = await fetch("/submit", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: `name=${encodeURIComponent(name)}&problem=${encodeURIComponent(problem)}&answer=${encodeURIComponent(answer)}`
+        });
+        const data = await res.json();
+
+        alert(data.message || "Respuesta enviada.");
+        document.getElementById("answer").value = "";
+        updateRankingTable();
+    });
+
+    // Inicialización
+    let startTimeEpoch = null;
+    async function init() {
+        // Para obtener start_time y duration (desde Flask)
+        const htmlStart = "{{ start_time }}";  // Ejemplo: "14:03:00"
+        const htmlDuration = {{ duration }};   // segundos
+
+        // Convierte hora local a epoch para usar en JS (ajustamos hoy)
+        const [h,m,s] = htmlStart.split(":").map(Number);
+        const now = new Date();
+        const startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m, s);
+        startTimeEpoch = startDate.getTime()/1000;
+        durationSeconds = htmlDuration;
+
+        // Actualiza cada segundo
+        setInterval(async () => {
+            const st = await fetchStatus();
+            if(!st) return;
+            updateFormAndStatus(st.status, Math.floor(st.elapsed));
+            updateRankingTable();
+        }, 5000);
+
+        // Actualiza tabla inmediatamente y status
+        const st = await fetchStatus();
+        if(st) updateFormAndStatus(st.status, Math.floor(st.elapsed));
+        updateRankingTable();
+    }
+
+    window.onload = init;
+</script>
+</body>
+</html>

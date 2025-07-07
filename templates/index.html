@@ -58,7 +58,44 @@
     const timerElem = document.getElementById("timer");
     const form = document.getElementById("submitForm");
     const rankingBody = document.querySelector("#rankingTable tbody");
+    const startTimeStr = "{{ start_time_iso }}"; // ISO 8601 string enviado desde Flask
+    const startTime = new Date(startTimeStr);
+    const durationSeconds = {{ duration }};
 
+     // Función para convertir segundos a HH:MM:SS
+    function secondsToHMS(seconds) {
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
+        const s = Math.floor(seconds % 60);
+        return `${h.toString().padStart(2,"0")}:${m.toString().padStart(2,"0")}:${s.toString().padStart(2,"0")}`;
+    }
+
+    // Función updateTimer para controlar el cronómetro y bloqueo
+    function updateTimer() {
+        const now = new Date();
+        if (now < startTime) {
+            const diff = Math.floor((startTime - now) / 1000);
+            timerElem.textContent = `Comienza en: ${secondsToHMS(diff)}`;
+            form.classList.add("disabled");
+            statusMsg.textContent = "El concurso comenzará pronto.";
+        } else if (now < new Date(startTime.getTime() + durationSeconds * 1000)) {
+            const elapsed = Math.floor((now - startTime) / 1000);
+            timerElem.textContent = `Tiempo transcurrido: ${secondsToHMS(elapsed)}`;
+            form.classList.remove("disabled");
+            statusMsg.textContent = "Concurso en curso";
+        } else {
+            timerElem.textContent = "";
+            form.classList.add("disabled");
+            statusMsg.textContent = "Concurso finalizado.";
+        }
+    }
+
+    // Llama updateTimer cada segundo para actualizar la UI
+    setInterval(updateTimer, 1000);
+    updateTimer();
+
+
+    
     let status = "";
     let startTime = null;
     let durationSeconds = null;

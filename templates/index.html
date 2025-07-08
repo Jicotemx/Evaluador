@@ -58,7 +58,7 @@
   function mostrarEnunciado() {
     const pid = document.getElementById("problemSelect").value;
     const html = `
-      <div><strong>Enunciado:</strong> ${enunciados[pid]}</div>      
+      <div><strong>Enunciado:</strong> $$${enunciados[pid]}$$</div>      
     `;
     document.getElementById("enunciado").innerHTML = html;
     MathJax.typeset();  // Renderiza LaTeX
@@ -143,7 +143,7 @@ document.getElementById("registerBtn").onclick = () => {
     body: `name=${encodeURIComponent(name)}`
   }).then(res => res.json()).then(data => {
     if (data.error) {
-      document.getElementById("registerMsg").textContent = data.error;
+      document.getElementById("registerMsg").textContent = data.error;enun
     } else {
       document.getElementById("registerMsg").textContent = "Registrado correctamente.";
       loadParticipants();

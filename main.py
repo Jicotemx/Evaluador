@@ -1,6 +1,7 @@
 # evaluador_icpc_con_tiempo.py
 
 import eventlet
+import string
 eventlet.monkey_patch()
 
 from flask import Flask, render_template, request, jsonify

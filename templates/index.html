@@ -58,8 +58,7 @@
   function mostrarEnunciado() {
     const pid = document.getElementById("problemSelect").value;
     const html = `
-      <div><strong>Enunciado:</strong> $$${enunciados[pid]}$$</div>
-      <div><strong>Respuesta:</strong> ${respuestas[pid]}</div>
+      <div><strong>Enunciado:</strong> $$${enunciados[pid]}$$</div>      
     `;
     document.getElementById("enunciado").innerHTML = html;
     MathJax.typeset();  // Renderiza LaTeX

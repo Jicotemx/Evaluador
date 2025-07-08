@@ -56,6 +56,7 @@ def cargar_problemas_desde_latex(archivo):
                 problemas[pid] = {
                     "enunciado": enunciado,
                     "respuesta": respuesta
+                }
     return problemas
 
 problems = cargar_problemas_desde_latex("problemas.tex")

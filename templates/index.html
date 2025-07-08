@@ -10,28 +10,28 @@
 
   <!-- MathJax para mostrar LaTeX -->
 <script>
-  MathJax = {
-    tex: {
-      inlineMath: [['\\(', '\\)']],
-      displayMath: [['\\[', '\\]']],
-      processEscapes: true,
-    },
-    options: {
-      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
-    },
-    startup: {
-      pageReady: () => {
-        return MathJax.startup.defaultPageReady().then(() => {
-          console.log('MathJax inicializado');
-        });
-      }
+MathJax = {
+  tex: {
+    inlineMath: [['\\(', '\\)']],
+    displayMath: [['\\[', '\\]']],
+    processEscapes: true,
+    packages: {'[+]': ['ams']}
+  },
+  loader: {
+    load: ['[tex]/ams']
+  },
+  startup: {
+    pageReady: () => {
+      return MathJax.startup.defaultPageReady().then(() => {
+        console.log('MathJax listo');
+      });
     }
-  };
+  }
+};
 </script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
   
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" id="MathJax-script"></script>
 </head>
 <body>
 
@@ -68,51 +68,43 @@
       <option value="{{ pid }}">{{ pid }}</option>
     {% endfor %}
   </select><br/>
-  <div id="enunciado" style="margin: 1em 0; font-size: 18px;"></div>
+  <div id="enunciado" class="enunciado-container"></div>
   
 <script>
-// 1. Almacenar enunciados como texto CRUDO (sin procesar)
+// 1. Almacenar enunciados como texto RAW
 const enunciados = {
   {% for pid, data in problems.items() %}
-    "{{ pid }}": `{{ data["enunciado"] }}`,
+    "{{ pid }}": {{ data.enunciado | tojson }},  // tojson maneja escapes automáticos
   {% endfor %}
 };
 
-// 2. Función mejorada para mostrar enunciados
+// 2. Función para mostrar el enunciado
 function mostrarEnunciado() {
   const pid = document.getElementById("problemSelect").value;
   const enunciadoDiv = document.getElementById("enunciado");
   
-  // Limpiar contenedor
-  enunciadoDiv.innerHTML = '';
+  // Limpiar y crear elementos
+  enunciadoDiv.innerHTML = `
+    <div class="enunciado-container">
+      <strong>Enunciado:</strong>
+      <div id="math-content-${pid}">${enunciados[pid]}</div>
+    </div>
+  `;
   
-  // Crear elementos de manera segura
-  const strong = document.createElement("strong");
-  strong.textContent = "Enunciado: ";
-  
-  const mathContainer = document.createElement("div");
-  mathContainer.id = "math-container-" + pid;
-  mathContainer.textContent = enunciados[pid];  // Usar textContent, no innerHTML
-  
-  // Construir estructura
-  enunciadoDiv.appendChild(strong);
-  enunciadoDiv.appendChild(mathContainer);
-  
-  // 3. Reprocesar MathJax con retardo mínimo
+  // 3. Reprocesar MathJax con retardo para permitir renderizado
   setTimeout(() => {
-    MathJax.typesetPromise([mathContainer]).then(() => {
-      console.log("LaTeX renderizado para problema", pid);
-    }).catch(err => console.error("MathJax error:", err));
-  }, 50);
+    const mathElement = document.getElementById(`math-content-${pid}`);
+    if (mathElement) {
+      MathJax.typesetPromise([mathElement]).catch(err => {
+        console.error("Error en MathJax:", err);
+      });
+    }
+  }, 100);
 }
 
-// 4. Inicializar al cargar la página
-document.addEventListener("DOMContentLoaded", () => {
-  // Esperar a que MathJax esté completamente cargado
-  MathJax.startup.promise.then(() => {
-    mostrarEnunciado();
-  });
-});
+// Inicializar al cargar
+document.addEventListener("DOMContentLoaded", mostrarEnunciado);
+
 
       
   <!-- Inicia comentario  

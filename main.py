@@ -49,7 +49,7 @@ def cargar_problemas_desde_latex(archivo):
                     except ValueError:
                         respuesta = respuesta_str.strip()  # Deja como texto si no es número
                 problemas[pid] = {
-                    "nombre": pid
+                    "nombre": pid,
                     "enunciado": enunciado,
                     "respuesta": respuesta
                 }

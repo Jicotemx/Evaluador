@@ -105,9 +105,8 @@ def index():
     status = get_status()
     start_time_iso = START_TIME.isoformat()
     duration_seconds = int(DURATION.total_seconds())
-    problems_dict = {p['nombre']: {'enunciado': p['enunciado']} for p in problems}
-    # return render_template("index.html", status=status, start_time_iso=start_time_iso, duration=duration_seconds,problems=problems)
-    return render_template("index.html", status=status, start_time_iso=start_time_iso, duration=duration_seconds,problems=problems_dict)
+    
+    return render_template("index.html", status=status, start_time_iso=start_time_iso, duration=duration_seconds,problems=problems)    
 
 
 @app.route("/submit", methods=["POST"])

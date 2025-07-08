@@ -36,10 +36,14 @@ participants = {}  # nombre -> info
 def cargar_problemas_desde_latex(archivo):
     problemas = {}
     with open(archivo, encoding="utf-8") as f:
-        for line in f:
-            match = re.match(r"\\problem\{(.*?)\}\{(.*?)\}\{(.*?)\}", line.strip())
-            if match:
-                pid, enunciado, respuesta_str = match.groups()
+        contenido = f.read()  # Leer TODO el contenido, no línea por línea
+    
+    # Regex mejorada para manejar saltos de línea y contenido complejo
+    patron = r"\\problem\{([^{}]*)\}\{((?:[^{}]|\{[^{}]*\})*)\}\{([^{}]*)\}"
+    matches = re.findall(patron, contenido, re.DOTALL)
+    
+    for match in matches:
+                pid, enunciado, respuesta_str = match
                 # Convertimos la respuesta a número (entero si puede, flotante si no)
                 try:
                     respuesta = int(respuesta_str)

@@ -33,6 +33,33 @@ participants = {}  # nombre -> info
 # FUNCIONES AUXILIARES
 # =====================
 
+@app.route("/login", methods=["POST"])
+def login():
+    name = request.form["name"].strip()
+    password = request.form["password"].strip()
+
+    # Puedes usar un archivo JSON o diccionario para gestionar usuarios registrados
+    if name not in participants:
+        # Nuevo usuario
+        participants[name] = {
+            "password": password,  # En producción, deberías hashear esto
+            "start_time": datetime.now(),
+            "responses": {},
+            "attempts": {pid: 0 for pid in problems},
+            "status": {pid: "" for pid in problems},
+            "score": 0,
+            "penalty": 0
+        }
+        return jsonify({"message": "Registrado y conectado"})
+    else:
+        # Ya existe
+        if participants[name]["password"] != password:
+            return jsonify({"error": "Contraseña incorrecta"})
+        return jsonify({"message": "Acceso concedido"})
+
+
+
+
 def cargar_problemas_desde_latex(archivo):
     problemas = {}
     with open(archivo, encoding="utf-8") as f:

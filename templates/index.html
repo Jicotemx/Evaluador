@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Evaluador ICPC</title>
+  <title>Evaluador numérico</title>
   <style>
     .disabled { opacity: 0.5; pointer-events: none; }
     table, th, td { border: 1px solid black; border-collapse: collapse; padding: 4px; }
@@ -86,12 +86,7 @@ const enunciados = {
 
 function mostrarEnunciado() {
   const pid = document.getElementById("problemSelect").value;
-  const enunciadoConRespuesta = `
-    <div><strong>Enunciado:</strong> ${enunciados[pid]}</div>
-    <div><strong>Respuesta:</strong> ${respuestas[pid]}</div>
-  `;
-  // document.getElementById("enunciado").innerHTML = enunciados[pid];
-  document.getElementById("enunciado").innerHTML = enunciadoConRespuesta;
+  document.getElementById("enunciado").innerHTML = enunciados[pid];
   MathJax.typeset();
 }
 

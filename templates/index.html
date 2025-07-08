@@ -48,12 +48,16 @@
       <option value="{{ pid }}">{{ pid }}</option>
     {% endfor %}
   </select><br/>
-
+  const enunciados = {
+  {% for pid, data in problems.items() %}
+    "{{ pid }}": {{ data["enunciado"]|tojson }},
+  {% endfor %}
+  };
   <div id="enunciado" style="margin: 1em 0; font-size: 18px;"></div>
 
   <label>Respuesta:</label>
   <input type="text" id="answerInput" required /><br/>
-
+  
   <button type="submit">Enviar</button>
   <div id="submitMsg"></div>
 </form>

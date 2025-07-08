@@ -78,15 +78,12 @@
 <script>
 const startTime = new Date("{{ start_time_iso }}");
 const durationSeconds = {{ duration }};
-
-// Enunciados desde Flask
 const enunciados = {
   {% for pid, data in problems.items() %}
-    "{{ pid }}": `{{ data["enunciado"] }}`,
+    "{{ pid }}": `{{ data["enunciado"]|safe }}`,
   {% endfor %}
 };
 
-// Mostrar enunciado con MathJax
 function mostrarEnunciado() {
   const pid = document.getElementById("problemSelect").value;
   document.getElementById("enunciado").innerHTML = enunciados[pid];
@@ -97,4 +94,114 @@ function secondsToHMS(seconds) {
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   const s = seconds % 60;
-  return `${h.toString().padStart(2,"0")}:${m.toString().padStart(2,"0")}:
+  return `${h.toString().padStart(2,"0")}:${m.toString().padStart(2,"0")}:${s.toString().padStart(2,"0")}`;
+}
+
+function updateTimer() {
+  const now = new Date();
+  const form = document.getElementById("submitForm");
+  const statusMsg = document.getElementById("statusMsg");
+  const timerElem = document.getElementById("timer");
+
+  if (now < startTime) {
+    const diff = Math.floor((startTime - now) / 1000);
+    timerElem.textContent = `Comienza en: ${secondsToHMS(diff)}`;
+    form.classList.add("disabled");
+    statusMsg.textContent = "El concurso comenzará pronto.";
+  } else if (now < new Date(startTime.getTime() + durationSeconds * 1000)) {
+    const elapsed = Math.floor((now - startTime) / 1000);
+    timerElem.textContent = `Tiempo transcurrido: ${secondsToHMS(elapsed)}`;
+    form.classList.remove("disabled");
+    statusMsg.textContent = "Concurso en curso";
+  } else {
+    timerElem.textContent = "Concurso finalizado.";
+    form.classList.add("disabled");
+    statusMsg.textContent = "Concurso finalizado.";
+  }
+}
+
+// Registro
+document.getElementById("registerBtn").onclick = () => {
+  const name = document.getElementById("nameInput").value.trim();
+  if (!name) {
+    document.getElementById("registerMsg").textContent = "Por favor escribe tu nombre.";
+    return;
+  }
+  fetch("/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `name=${encodeURIComponent(name)}`
+  }).then(res => res.json()).then(data => {
+    if (data.error) {
+      document.getElementById("registerMsg").textContent = data.error;
+    } else {
+      document.getElementById("registerMsg").textContent = "Registrado correctamente.";
+      loadParticipants();
+    }
+  });
+};
+
+// Participantes
+function loadParticipants() {
+  fetch("/participants")
+    .then(res => res.json())
+    .then(list => {
+      const ul = document.getElementById("participantsList");
+      ul.innerHTML = "";
+      list.forEach(name => {
+        const li = document.createElement("li");
+        li.textContent = name;
+        ul.appendChild(li);
+      });
+    });
+}
+
+// Envío de respuesta
+document.getElementById("submitForm").onsubmit = e => {
+  e.preventDefault();
+  const name = document.getElementById("submitName").value.trim();
+  const pid = document.getElementById("problemSelect").value;
+  const ans = document.getElementById("answerInput").value.trim();
+  if (!name || !pid || !ans) return;
+  fetch("/submit", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `name=${encodeURIComponent(name)}&problem=${encodeURIComponent(pid)}&answer=${encodeURIComponent(ans)}`
+  }).then(res => res.json()).then(data => {
+    document.getElementById("submitMsg").textContent = data.message || data.error || "";
+    loadRanking();
+  });
+};
+
+// Ranking
+function loadRanking() {
+  fetch("/ranking")
+    .then(res => res.json())
+    .then(data => {
+      const tbody = document.querySelector("#rankingTable tbody");
+      tbody.innerHTML = "";
+      data.forEach(part => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${part.name}</td>
+          ${Object.values(part.status).map(s => `<td>${s}</td>`).join("")}
+          <td>${part.score}</td>
+          <td>${part.penalty}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    });
+}
+
+updateTimer();
+loadParticipants();
+loadRanking();
+setInterval(() => {
+  updateTimer();
+  loadParticipants();
+  loadRanking();
+}, 10000); // cada 10s
+</script>
+
+</body>
+</html>

@@ -122,17 +122,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
       
-  <!-- Inicia comentario  
-  function mostrarEnunciado() {
-    const pid = document.getElementById("problemSelect").value;
-    const html = `
-      <div><strong>Enunciado:</strong> $$${enunciados[pid]}$$</div>      
-    `;
-    document.getElementById("enunciado").innerHTML = html;
-    MathJax.typeset();  // Renderiza LaTeX
-  }
-  Termina comentario  
-  --> 
     
 </script>
 
@@ -165,11 +154,6 @@ document.addEventListener("DOMContentLoaded", () => {
 const startTime = new Date("{{ start_time_iso }}");
 const durationSeconds = {{ duration }};
 
-function mostrarEnunciado() {
-  const pid = document.getElementById("problemSelect").value;
-  document.getElementById("enunciado").innerHTML = enunciados[pid];
-  MathJax.typeset();
-}
 
 function secondsToHMS(seconds) {
   const h = Math.floor(seconds / 3600);

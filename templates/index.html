@@ -93,11 +93,6 @@
 <script>
 const startTime = new Date("{{ start_time_iso }}");
 const durationSeconds = {{ duration }};
-const enunciados = {
-  {% for pid, data in problems.items() %}
-    "{{ pid }}": `{{ data["enunciado"]|safe }}`,
-  {% endfor %}
-};
 
 function mostrarEnunciado() {
   const pid = document.getElementById("problemSelect").value;

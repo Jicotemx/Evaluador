@@ -28,6 +28,7 @@ MathJax = {
     }
   }
 };
+
 </script>
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
   
@@ -37,59 +38,52 @@ MathJax = {
 
  <!-- Login / Registro -->
   <div id="loginDiv">
-    <h2>Bienvenido</h2>
-    <input type="text" id="loginName" placeholder="Nombre" />
-    <input type="password" id="loginPassword" placeholder="Contraseña" />
-    <button onclick="login()">Entrar</button>
-    <div id="loginMsg"></div>
-  </div>
+    <h2>Acceso</h2>
+  <input type="text" id="loginName" placeholder="Tu nombre" />
+  <input type="password" id="loginPassword" placeholder="Contraseña" />
+  <button onclick="login()">Entrar</button>
+  <div id="loginMsg"></div>
+</div>
 
-  <!-- Página del concurso -->
-  <div id="mainDiv" style="display:none">
-    <!-- Aquí va TODO lo que ya tienes: reloj, problemas, envío, ranking... -->
-  </div>
-
-
-  
-<h1>Evaluador Concurso</h1>
-
-<!-- Estado y temporizador -->
-<div>
+<!-- 🧐 Main concurso -->
+<div id="mainDiv" style="display:none">
   <div id="statusMsg"></div>
-  <div id="timer" style="font-weight: bold;"></div>
+  <div id="timer" style="font-weight:bold"></div>
+
+  <form id="submitForm">
+    <h2>Enviar respuesta</h2>
+    <label>Nombre:</label>
+    <input type="text" id="submitName" readonly /><br/>
+
+    <label>Problema:</label>
+    <select id="problemSelect" required onchange="mostrarEnunciado()">
+      {% for pid in problems %}<option value="{{ pid }}">{{ pid }}</option>{% endfor %}
+    </select><br/>
+
+    <div id="enunciado" style="margin:1em 0; font-size:18px;"></div>
+
+    <label>Respuesta:</label>
+    <input type="text" id="answerInput" required /><br/>
+    <button type="submit">Enviar</button>
+    <div id="submitMsg"></div>
+  </form>
+
+  <h3>Participantes</h3>
+  <ul id="participantsList"></ul>
+
+  <h3>Tabla de posiciones</h3>
+  <table id="rankingTable">
+    <thead>
+      <tr>
+        <th>Participante</th>
+        {% for pid in problems %}<th>{{ pid }}</th>{% endfor %}
+        <th>Puntos</th><th>Penalización</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 </div>
 
-<!-- Registro -->
-<div id="registrationDiv">
-  <h2>Regístrate</h2>
-  <input type="text" id="nameInput" placeholder="Tu nombre" />
-  <button id="registerBtn">Registrar</button>
-
-  <input type="text" id="ContrasennaIn" placeholder="Contraseña" />
-  <button id="registerBtn">Registrar</button>
-  
-  <div id="registerMsg"></div>
-</div>
-
-<!-- Lista de participantes -->
-<h3>Participantes</h3>
-<ul id="participantsList"></ul>
-
-<!-- Formulario de envío -->
-<form id="submitForm" class="disabled">
-  <h2>Enviar respuesta</h2>
-
-  <label>Nombre:</label>
-  <input type="text" id="submitName" required /><br/>
-
-  <label>Problema:</label>
-  <select id="problemSelect" required onchange="mostrarEnunciado()">
-    {% for pid in problems %}
-      <option value="{{ pid }}">{{ pid }}</option>
-    {% endfor %}
-  </select><br/> 
-   <div id="enunciado" style="margin: 1em 0; font-size: 18px;"></div>
-   
 <script>
 // 1. Almacenar los problemas completos
 const problemasData = {
@@ -101,6 +95,33 @@ const problemasData = {
   {% endfor %}
 };
 
+const startTime = new Date("{{ start_time_iso }}");
+const durationSeconds = {{ duration }};
+
+function login() {
+  const name = document.getElementById("loginName").value.trim();
+  const password = document.getElementById("loginPassword").value.trim();
+  if (!name || !password) {
+    document.getElementById("loginMsg").textContent = "Falta nombre o contraseña.";
+    return;
+  }
+  fetch("/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `name=${encodeURIComponent(name)}&password=${encodeURIComponent(password)}`
+  }).then(r => r.json()).then(data => {
+    if (data.error) {
+      document.getElementById("loginMsg").textContent = data.error;
+    } else {
+      document.getElementById("loginDiv").style.display = "none";
+      document.getElementById("mainDiv").style.display = "block";
+      document.getElementById("submitName").value = name;
+      iniciarConcurso();
+    }
+  });
+}
+
+// 2. Función para mostrar el enunciado
 // 2. Función para mostrar el enunciado
 function mostrarEnunciado() {
   const pid = document.getElementById("problemSelect").value;
@@ -138,70 +159,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-
-      
-    
-</script>
-
-
-  <label>Respuesta:</label>
-  <input type="text" id="answerInput" required /><br/>
-  
-  <button type="submit">Enviar</button>
-  <div id="submitMsg"></div>
-</form>
-
-<!-- Tabla de posiciones -->
-<h3>Tabla de posiciones</h3>
-<table id="rankingTable">
-  <thead>
-    <tr>
-      <th>Participante</th>
-      {% for pid in problems %}
-        <th>{{ pid }}</th>
-      {% endfor %}
-      <th>Puntos</th>
-      <th>Penalización</th>
-    </tr>
-  </thead>
-  <tbody></tbody>
-</table>
-
-<!-- Scripts -->
-<script>
-const startTime = new Date("{{ start_time_iso }}");
-const durationSeconds = {{ duration }};
-
-function login() {
-  const name = document.getElementById("loginName").value.trim();
-  const pass = document.getElementById("loginPassword").value.trim();
-  if (!name || !pass) {
-    document.getElementById("loginMsg").textContent = "Nombre y contraseña requeridos.";
-    return;
-  }
-
-  fetch("/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: `name=${encodeURIComponent(name)}&password=${encodeURIComponent(pass)}`
-  }).then(res => res.json()).then(data => {
-    if (data.error) {
-      document.getElementById("loginMsg").textContent = data.error;
-    } else {
-      // Mostrar contenido del concurso
-      document.getElementById("loginDiv").style.display = "none";
-      document.getElementById("mainDiv").style.display = "block";
-      loadEverything();
-    }
-  });
-}
-  
-
-function secondsToHMS(seconds) {
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = seconds % 60;
-  return `${h.toString().padStart(2,"0")}:${m.toString().padStart(2,"0")}:${s.toString().padStart(2,"0")}`;
+function iniciarConcurso() {
+  updateTimer();
+  loadParticipants();
+  loadRanking();
+  mostrarEnunciado();
+  setInterval(() => {
+    updateTimer();
+    loadParticipants();
+    loadRanking();
+  }, 10000);
 }
 
 function updateTimer() {
@@ -227,41 +194,13 @@ function updateTimer() {
   }
 }
 
-// Registro
-document.getElementById("registerBtn").onclick = () => {
-  const name = document.getElementById("nameInput").value.trim();
-  if (!name) {
-    document.getElementById("registerMsg").textContent = "Por favor escribe tu nombre.";
-    return;
-  }
-  fetch("/register", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: `name=${encodeURIComponent(name)}`
-  }).then(res => res.json()).then(data => {
-    if (data.error) {
-      document.getElementById("registerMsg").textContent = data.error;enun
-    } else {
-      document.getElementById("registerMsg").textContent = "Registrado correctamente.";
-      loadParticipants();
-    }
-  });
-};
-
-// Participantes
-function loadParticipants() {
-  fetch("/participants")
-    .then(res => res.json())
-    .then(list => {
-      const ul = document.getElementById("participantsList");
-      ul.innerHTML = "";
-      list.forEach(name => {
-        const li = document.createElement("li");
-        li.textContent = name;
-        ul.appendChild(li);
-      });
-    });
+function secondsToHMS(seconds) {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  return `${h.toString().padStart(2,"0")}:${m.toString().padStart(2,"0")}:${s.toString().padStart(2,"0")}`;
 }
+
 
 // Envío de respuesta
 document.getElementById("submitForm").onsubmit = e => {
@@ -279,6 +218,23 @@ document.getElementById("submitForm").onsubmit = e => {
     loadRanking();
   });
 };
+
+
+// Participantes
+function loadParticipants() {
+  fetch("/participants")
+    .then(res => res.json())
+    .then(list => {
+      const ul = document.getElementById("participantsList");
+      ul.innerHTML = "";
+      list.forEach(name => {
+        const li = document.createElement("li");
+        li.textContent = name;
+        ul.appendChild(li);
+      });
+    });
+}
+
 
 // Ranking
 function loadRanking() {
@@ -299,16 +255,8 @@ function loadRanking() {
       });
     });
 }
-
-updateTimer();
-loadParticipants();
-loadRanking();
-setInterval(() => {
-  updateTimer();
-  loadParticipants();
-  loadRanking();
-}, 10000); // cada 10s
+      
+   
 </script>
-
 </body>
 </html>

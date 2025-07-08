@@ -50,12 +50,12 @@
   </select><br/>
   <div id="enunciado" style="margin: 1em 0; font-size: 18px;"></div>
   <script>
-  const enunciados = {
-  {% for pid, data in problems.items() %}
-    "{{ pid }}": {{ data["enunciado"]|tojson }},
-  {% endfor %}
-  };
 
+const enunciados = {
+  {% for pid, data in problems.items() %}
+    "{{ pid }}": `{{ data["enunciado"] | replace('"', '\\"') | safe }}`,
+  {% endfor %}
+};
 function mostrarEnunciado() {
   const pid = document.getElementById("problemSelect").value;
   const enunciadoDiv = document.getElementById("enunciado");

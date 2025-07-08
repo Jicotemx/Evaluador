@@ -65,22 +65,25 @@ def cargar_problemas_desde_latex(archivo):
     with open(archivo, encoding="utf-8") as f:
         contenido = f.read()  # Leer TODO el contenido, no línea por línea
     
-    # Regex mejorada para manejar saltos de línea y contenido complejo
-    patron = r"\\problem\{([^{}]*)\}\{((?:[^{}]|\{[^{}]*\})*)\}\{([^{}]*)\}"
-    matches = re.findall(patron, contenido, re.DOTALL)
-    
-    for match in matches:
-                pid, enunciado, respuesta_str = match
-                # Convertimos la respuesta a número (entero si puede, flotante si no)
-                try:
-                    respuesta = int(respuesta_str)
-                except ValueError:
-                    try:
-                        respuesta = float(respuesta_str)
-                    except ValueError:
-                        respuesta = respuesta_str.strip()  # Deja como texto si no es número
-                problemas[pid] = {
-                    "nombre": pid,
+    partes = contenido.split("|||")
+    partes = [p.strip() for p in partes if p.strip() != ""]  # Elimina vacíos
+
+    if len(partes) % 2 != 0:
+        raise ValueError("El archivo tiene un número impar de bloques. Faltan enunciados o respuestas.")
+    letras = string.ascii_uppercase  # 'A', 'B', 'C', ...
+    for i in range(0, len(partes), 2):
+        letra = letras[i // 2]
+        enunciado = partes[i]
+        respuesta_str = partes[i + 1]
+        try:
+            respuesta = int(respuesta_str)
+        except ValueError:
+            try:
+                respuesta = float(respuesta_str)
+            except ValueError:
+                respuesta = respuesta_str.strip()
+        problemas[letra] = {
+                    "nombre": letra,
                     "enunciado": enunciado,
                     "respuesta": respuesta
                 }

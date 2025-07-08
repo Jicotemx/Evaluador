@@ -88,20 +88,23 @@ function mostrarEnunciado() {
   
   if (!problemasData[pid]) return;
   
-  // Envolvemos en delimitadores LaTeX
-  const latexHTML = `
+  // Limpiar y crear elementos
+  enunciadoDiv.innerHTML = `
     <div class="enunciado-container">
       <strong>Enunciado:</strong>
-      <div id="math-content">\\[${problemasData[pid].enunciado}\\]</div>
+      <div id="math-content">${problemasData[pid].enunciado}</div>
     </div>
   `;
-
-  enunciadoDiv.innerHTML = latexHTML;
   
   // Reprocesar MathJax
-  MathJax.typesetPromise([enunciadoDiv]).catch(err => {
-    console.error("MathJax error:", err);
-  });
+  setTimeout(() => {
+    const mathElement = document.getElementById("math-content");
+    if (mathElement) {
+      MathJax.typesetPromise([mathElement]).catch(err => {
+        console.error("MathJax error:", err);
+      });
+    }
+  }, 100);
 }
 
 // 3. Inicializar al cargar

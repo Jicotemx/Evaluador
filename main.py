@@ -22,12 +22,6 @@ anno=2025; dia=7; mes=7;  hora=21; minuto=43
 DURATION = timedelta(minutes=20)  # Duración del concurso
 LOCAL_TIMEZONE = pytz.timezone("America/Mexico_City")  # Cambia según tu ubicación
 START_TIME = LOCAL_TIMEZONE.localize(datetime(year=anno, month=mes, day=dia, hour=hora, minute=minuto, second=0, microsecond=0))
-# Lista de problemas
-problems = {
-    "A": 42,
-    "B": 3.1416,
-    "C": 2024
-}
 
 # Almacén de resultados y participantes
 participants = {}  # nombre -> info

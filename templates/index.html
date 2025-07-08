@@ -53,9 +53,10 @@
 
 const enunciados = {
   {% for pid, data in problems.items() %}
-    "{{ pid }}": `{{ data["enunciado"] | replace('"', '\\"') | safe }}`,
+    "{{ pid }}": `{{ data["enunciado"] |}}`,
   {% endfor %}
 };
+    
 function mostrarEnunciado() {
   const pid = document.getElementById("problemSelect").value;
   const enunciadoDiv = document.getElementById("enunciado");
@@ -67,17 +68,20 @@ function mostrarEnunciado() {
   const strong = document.createElement("strong");
   strong.textContent = "Enunciado: ";
   
-  const span = document.createElement("span");
-  span.id = "latex-content";
-  span.textContent = enunciados[pid];
+  const mathContainer = document.createElement("div");
+  mathContainer.id = "math-container-" + pid;
+  mathContainer.textContent = enunciados[pid];  // Usar textContent, no innerHTML
   
+  // Construir estructura  
   enunciadoDiv.appendChild(strong);
-  enunciadoDiv.appendChild(span);
+  enunciadoDiv.appendChild(mathContainer);
   
-  // Reprocesar MathJax solo en el nuevo contenido
-  MathJax.typesetPromise([span]).then(() => {
-    console.log("LaTeX renderizado");
-  }).catch((err) => console.error("Error en MathJax:", err));
+  //3. Reprocesar MathJax con retardo mínimo
+  setTimeout(() => {
+    MathJax.typesetPromise([mathContainer]).then(() => {
+      console.log("LaTeX renderizado para problema", pid);
+    }).catch(err => console.error("MathJax error:", err));
+  }, 50);
 }
 
 

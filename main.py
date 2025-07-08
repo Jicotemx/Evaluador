@@ -15,7 +15,7 @@ socketio = SocketIO(app)
 # =====================
 # CONFIGURACIÓN
 # =====================
-anno=2025; dia=7; mes=7;  hora=21; minuto=43
+anno=2025; dia=7; mes=7;  hora=22; minuto=5
 #START_TIME = datetime.now()#.replace(second=0, microsecond=0) + timedelta(minutes)  # Empieza en 1 minuto desde que corre
 #START_TIME = datetime(2025,07,07,15,10)
 #START_TIME = datetime(year=anno, month=mes, day=dia, hour=hora, minute=minuto, second=0, microsecond=0)
@@ -121,7 +121,11 @@ def submit():
         return jsonify({"message": "Ya resuelto"})
 
     info["attempts"][pid] += 1
-    correct = str(problems[pid]) == answer
+    try:
+       user_answer = float(answer)
+       correct = abs(user_answer - float(problems[pid]["respuesta"])) < 1e-6
+    except ValueError:
+       correct = False
 
     if correct:
         elapsed = int(get_elapsed_time() // 60)

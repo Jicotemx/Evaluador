@@ -15,7 +15,7 @@ socketio = SocketIO(app)
 # =====================
 # CONFIGURACIÓN
 # =====================
-anno=2025; dia=7; mes=7;  hora=23; minuto=40
+anno=2025; dia=8; mes=7;  hora=8; minuto=20
 #START_TIME = datetime.now()#.replace(second=0, microsecond=0) + timedelta(minutes)  # Empieza en 1 minuto desde que corre
 #START_TIME = datetime(2025,07,07,15,10)
 #START_TIME = datetime(year=anno, month=mes, day=dia, hour=hora, minute=minuto, second=0, microsecond=0)

@@ -48,12 +48,24 @@
       <option value="{{ pid }}">{{ pid }}</option>
     {% endfor %}
   </select><br/>
+  <div id="enunciado" style="margin: 1em 0; font-size: 18px;"></div>
+  <script>
   const enunciados = {
   {% for pid, data in problems.items() %}
     "{{ pid }}": {{ data["enunciado"]|tojson }},
   {% endfor %}
   };
-  <div id="enunciado" style="margin: 1em 0; font-size: 18px;"></div>
+  function mostrarEnunciado() {
+    const pid = document.getElementById("problemSelect").value;
+    const html = `
+      <div><strong>Enunciado:</strong> $$${enunciados[pid]}$$</div>
+      <div><strong>Respuesta:</strong> ${respuestas[pid]}</div>
+    `;
+    document.getElementById("enunciado").innerHTML = html;
+    MathJax.typeset();  // Renderiza LaTeX
+  }
+</script>
+
 
   <label>Respuesta:</label>
   <input type="text" id="answerInput" required /><br/>

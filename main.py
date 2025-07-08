@@ -43,12 +43,18 @@ def cargar_problemas_desde_latex(archivo):
     with open(archivo, encoding="utf-8") as f:
         for line in f:
             match = re.match(r"\\problem\{(.*?)\}\{(.*?)\}\{(.*?)\}", line.strip())
-            if match:
-                pid, enunciado, respuesta = match.groups()
-                problemas[pid] = {
+            # Convertimos la respuesta a número (entero si puede, flotante si no)
+            try:
+                respuesta = int(respuesta_str)
+            except ValueError:
+               try:
+                   respuesta = float(respuesta_str)
+               except ValueError:
+                   respuesta = respuesta_str.strip()  # Deja como texto si no es número
+            problemas[pid] = {
                     "enunciado": enunciado,
-                    "respuesta": respuesta.strip()
-                }
+                    "respuesta": respuesta
+                }       
     return problemas
 
 problems = cargar_problemas_desde_latex("problemas.tex")

@@ -71,10 +71,20 @@ MathJax = {
   <div id="enunciado" class="enunciado-container"></div>
   
 <script>
+<!--  
 // 1. Almacenar enunciados como texto RAW
 const enunciados = {
   {% for pid, data in problems.items() %}
     "{{ pid }}": {{ data.enunciado | tojson }},  // tojson maneja escapes automáticos
+  {% endfor %}
+};
+-->  // 1. Almacenar los problemas completos
+const problemasData = {
+  {% for pid, data in problems.items() %}
+    "{{ pid }}": {
+      "enunciado": {{ data.enunciado | tojson }},
+      "respuesta": {{ data.respuesta | tojson }}
+    },
   {% endfor %}
 };
 
@@ -83,27 +93,37 @@ function mostrarEnunciado() {
   const pid = document.getElementById("problemSelect").value;
   const enunciadoDiv = document.getElementById("enunciado");
   
+  if (!problemasData[pid]) return;
+  
   // Limpiar y crear elementos
   enunciadoDiv.innerHTML = `
     <div class="enunciado-container">
       <strong>Enunciado:</strong>
-      <div id="math-content-${pid}">${enunciados[pid]}</div>
+      <div id="math-content">${problemasData[pid].enunciado}</div>
     </div>
   `;
   
-  // 3. Reprocesar MathJax con retardo para permitir renderizado
+  // Reprocesar MathJax
   setTimeout(() => {
-    const mathElement = document.getElementById(`math-content-${pid}`);
+    const mathElement = document.getElementById("math-content");
     if (mathElement) {
       MathJax.typesetPromise([mathElement]).catch(err => {
-        console.error("Error en MathJax:", err);
+        console.error("MathJax error:", err);
       });
     }
   }, 100);
 }
 
-// Inicializar al cargar
-document.addEventListener("DOMContentLoaded", mostrarEnunciado);
+// 3. Inicializar al cargar
+document.addEventListener("DOMContentLoaded", () => {
+  // Mostrar primer problema al cargar
+  mostrarEnunciado();
+  
+  // Configurar MathJax si no está global
+  if (typeof MathJax === 'undefined') {
+    console.warn("MathJax no está cargado");
+  }
+});
 
 
       

@@ -71,14 +71,7 @@ MathJax = {
   <div id="enunciado" class="enunciado-container"></div>
   
 <script>
-<!--  
-// 1. Almacenar enunciados como texto RAW
-const enunciados = {
-  {% for pid, data in problems.items() %}
-    "{{ pid }}": {{ data.enunciado | tojson }},  // tojson maneja escapes automáticos
-  {% endfor %}
-};
--->  // 1. Almacenar los problemas completos
+// 1. Almacenar los problemas completos
 const problemasData = {
   {% for pid, data in problems.items() %}
     "{{ pid }}": {

@@ -133,8 +133,10 @@ def submit():
        user_answer = float(answer)
        correct = abs(user_answer - float(problems[pid]["respuesta"])) < 1e-6
     except ValueError:
-       correct = False
-
+       try: 
+          correct = answer==problems[pid]["respuesta"]
+          except ValueError:
+              correct=False
     if correct:
         elapsed = int(get_elapsed_time() // 60)
         info["status"][pid] = "✔"

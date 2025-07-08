@@ -15,7 +15,7 @@ socketio = SocketIO(app)
 # =====================
 # CONFIGURACIÓN
 # =====================
-anno=2025; dia=7; mes=7;  hora=21; minuto=39
+anno=2025; dia=7; mes=7;  hora=21; minuto=43
 #START_TIME = datetime.now()#.replace(second=0, microsecond=0) + timedelta(minutes)  # Empieza en 1 minuto desde que corre
 #START_TIME = datetime(2025,07,07,15,10)
 #START_TIME = datetime(year=anno, month=mes, day=dia, hour=hora, minute=minuto, second=0, microsecond=0)
@@ -43,18 +43,19 @@ def cargar_problemas_desde_latex(archivo):
     with open(archivo, encoding="utf-8") as f:
         for line in f:
             match = re.match(r"\\problem\{(.*?)\}\{(.*?)\}\{(.*?)\}", line.strip())
-            # Convertimos la respuesta a número (entero si puede, flotante si no)
-            try:
-                respuesta = int(respuesta_str)
-            except ValueError:
-               try:
-                   respuesta = float(respuesta_str)
-               except ValueError:
-                   respuesta = respuesta_str.strip()  # Deja como texto si no es número
-            problemas[pid] = {
+            if match:
+                pid, enunciado, respuesta_str = match.groups()
+                # Convertimos la respuesta a número (entero si puede, flotante si no)
+                try:
+                    respuesta = int(respuesta_str)
+                except ValueError:
+                    try:
+                        respuesta = float(respuesta_str)
+                    except ValueError:
+                        respuesta = respuesta_str.strip()  # Deja como texto si no es número
+                problemas[pid] = {
                     "enunciado": enunciado,
                     "respuesta": respuesta
-                }       
     return problemas
 
 problems = cargar_problemas_desde_latex("problemas.tex")

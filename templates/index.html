@@ -55,6 +55,34 @@
     "{{ pid }}": {{ data["enunciado"]|tojson }},
   {% endfor %}
   };
+
+function mostrarEnunciado() {
+  const pid = document.getElementById("problemSelect").value;
+  const enunciadoDiv = document.getElementById("enunciado");
+  
+  // Usamos textContent en lugar de innerHTML para evitar escapes
+  enunciadoDiv.textContent = "";  // Limpiar el div
+  
+  // Crear elementos de manera programática
+  const strong = document.createElement("strong");
+  strong.textContent = "Enunciado: ";
+  
+  const span = document.createElement("span");
+  span.id = "latex-content";
+  span.textContent = enunciados[pid];
+  
+  enunciadoDiv.appendChild(strong);
+  enunciadoDiv.appendChild(span);
+  
+  // Reprocesar MathJax solo en el nuevo contenido
+  MathJax.typesetPromise([span]).then(() => {
+    console.log("LaTeX renderizado");
+  }).catch((err) => console.error("Error en MathJax:", err));
+}
+
+
+      
+  <!-- Inicia comentario  
   function mostrarEnunciado() {
     const pid = document.getElementById("problemSelect").value;
     const html = `
@@ -63,6 +91,9 @@
     document.getElementById("enunciado").innerHTML = html;
     MathJax.typeset();  // Renderiza LaTeX
   }
+  Termina comentario  
+  --> 
+    
 </script>
 
 

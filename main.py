@@ -9,6 +9,10 @@ from flask_socketio import SocketIO
 from datetime import datetime, timedelta
 import pytz
 import re
+import csv
+import os
+import requests
+import base64
 
 app = Flask(__name__)
 socketio = SocketIO(app)
@@ -196,6 +200,47 @@ def ranking():
 
     ranking_data.sort(key=lambda x: (-x["score"], x["penalty"]))
     return jsonify(ranking_data)
+
+def guardar_informe_concurso(participantes, start_time):
+    # Formatear fecha y hora de inicio → '2507081720.csv'
+    nombre_archivo = start_time.strftime("%y%m%d%H%M") + ".csv"
+    ruta_archivo = os.path.join("informes", nombre_archivo)  # crea en carpeta 'informes/'
+
+    os.makedirs("informes", exist_ok=True)
+
+    with open(ruta_archivo, "w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(["Participante", "Problemas resueltos", "Penalización", "Estado por problema"])
+        for p in participantes:
+            fila = [
+                p["name"],
+                p["score"],
+                p["penalty"],
+                *[p["status"].get(k, "") for k in sorted(p["status"].keys())]
+            ]
+            writer.writerow(fila)
+    return ruta_archivo
+
+def subir_con_github_api(filepath, repo, token, path_en_repo="informes/"):
+    with open(filepath, "rb") as f:
+        contenido = base64.b64encode(f.read()).decode("utf-8")
+
+    nombre_archivo = os.path.basename(filepath)
+    url = f"https://api.github.com/repos/{repo}/contents/{path_en_repo}{nombre_archivo}"
+
+    r = requests.put(url, json={
+        "message": f"Agregar informe {nombre_archivo}",
+        "content": contenido
+    }, headers={
+        "Authorization": f"token {token}"
+    })
+
+    if r.status_code in (200, 201):
+        print("Archivo subido con éxito")
+    else:
+        print("Error al subir:", r.text)
+
+
 
 # =====================
 # INICIO

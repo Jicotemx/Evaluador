@@ -90,7 +90,7 @@ function mostrarEnunciado() {
     <div><strong>Enunciado:</strong> ${enunciados[pid]}</div>
     <div><strong>Respuesta:</strong> ${respuestas[pid]}</div>
   `;
-  #document.getElementById("enunciado").innerHTML = enunciados[pid];
+  // document.getElementById("enunciado").innerHTML = enunciados[pid];
   document.getElementById("enunciado").innerHTML = enunciadoConRespuesta;
   MathJax.typeset();
 }

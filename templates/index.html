@@ -35,6 +35,22 @@ MathJax = {
 </head>
 <body>
 
+ <!-- Login / Registro -->
+  <div id="loginDiv">
+    <h2>Bienvenido</h2>
+    <input type="text" id="loginName" placeholder="Nombre" />
+    <input type="password" id="loginPassword" placeholder="Contraseña" />
+    <button onclick="login()">Entrar</button>
+    <div id="loginMsg"></div>
+  </div>
+
+  <!-- Página del concurso -->
+  <div id="mainDiv" style="display:none">
+    <!-- Aquí va TODO lo que ya tienes: reloj, problemas, envío, ranking... -->
+  </div>
+
+
+  
 <h1>Evaluador Concurso</h1>
 
 <!-- Estado y temporizador -->
@@ -156,6 +172,30 @@ document.addEventListener("DOMContentLoaded", () => {
 const startTime = new Date("{{ start_time_iso }}");
 const durationSeconds = {{ duration }};
 
+function login() {
+  const name = document.getElementById("loginName").value.trim();
+  const pass = document.getElementById("loginPassword").value.trim();
+  if (!name || !pass) {
+    document.getElementById("loginMsg").textContent = "Nombre y contraseña requeridos.";
+    return;
+  }
+
+  fetch("/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `name=${encodeURIComponent(name)}&password=${encodeURIComponent(pass)}`
+  }).then(res => res.json()).then(data => {
+    if (data.error) {
+      document.getElementById("loginMsg").textContent = data.error;
+    } else {
+      // Mostrar contenido del concurso
+      document.getElementById("loginDiv").style.display = "none";
+      document.getElementById("mainDiv").style.display = "block";
+      loadEverything();
+    }
+  });
+}
+  
 
 function secondsToHMS(seconds) {
   const h = Math.floor(seconds / 3600);

@@ -60,6 +60,24 @@
   <div id="submitMsg"></div>
 </form>
 
+<h3>Tabla de posiciones</h3>
+<table border="1" id="rankingTable">
+  <thead>
+    <tr>
+      <th>Participante</th>
+      {% for pid in problems %}
+        <th>{{ pid }}</th>
+      {% endfor %}
+      <th>Puntos</th>
+      <th>Penalización</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+
+  
+
 <script>
 const startTime = new Date("{{ start_time_iso }}");
 const durationSeconds = {{ duration }};
@@ -184,7 +202,48 @@ setInterval(() => {
 
 updateTimer();
 loadParticipants();
+function loadRanking() {
+  fetch("/ranking")
+    .then(res => res.json())
+    .then(data => {
+      const tbody = document.querySelector("#rankingTable tbody");
+      tbody.innerHTML = "";
+      data.forEach(row => {
+        const tr = document.createElement("tr");
+
+        const nameTd = document.createElement("td");
+        nameTd.textContent = row.name;
+        tr.appendChild(nameTd);
+
+        {% for pid in problems %}
+          const td{{ pid }} = document.createElement("td");
+          const estado = row.status["{{ pid }}"];
+          const intentos = row.attempts["{{ pid }}"];
+          td{{ pid }}.textContent = estado ? `${estado} (${intentos})` : "";
+          tr.appendChild(td{{ pid }});
+        {% endfor %}
+
+        const scoreTd = document.createElement("td");
+        scoreTd.textContent = row.score;
+        tr.appendChild(scoreTd);
+
+        const penaltyTd = document.createElement("td");
+        penaltyTd.textContent = row.penalty;
+        tr.appendChild(penaltyTd);
+
+        tbody.appendChild(tr);
+      });
+    });
+}
+
+
+  
 mostrarEnunciado();  
+setInterval(() => {
+  updateTimer();
+  loadParticipants();
+  loadRanking();
+}, 1000);  
 </script>
 
 </body>

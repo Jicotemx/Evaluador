@@ -66,9 +66,17 @@ def generar_csv(participantes):
     import csv
     output = StringIO()
     writer = csv.writer(output)
-    writer.writerow(["Participante", "Puntos", "Penalización"])
+    # Encabezado
+    encabezado = ["Participante"] + list(problems.keys()) + ["Puntos", "Penalización"]
+    writer.writerow(encabezado)
+
+    # Filas
     for name, datos in participantes.items():
-        writer.writerow([name, datos["score"], datos["penalty"]])
+        fila = [name]
+        for pid in problems.keys():
+            fila.append(datos["status"].get(pid, ""))
+        fila += [datos["score"], datos["penalty"]]
+        writer.writerow(fila)        
     return output.getvalue()
         
 

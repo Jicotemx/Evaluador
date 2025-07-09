@@ -134,7 +134,7 @@ def get_status():
     if now < START_TIME:
         return "before"
     elif now > START_TIME + DURATION:
-        if now >= startTime + timedelta(seconds=durationSeconds) and not informe_subido:
+        if informe_subido:
            guardar_y_subir_informe(participantes, startTime)
            informe_subido = True
         return "after"

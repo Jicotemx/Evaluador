@@ -11,7 +11,6 @@ import pytz
 import re
 import csv
 import os
-import requests
 import base64
 import smtplib
 from email.message import EmailMessage
@@ -51,7 +50,7 @@ def generar_csv(participantes):
 # =====================
 # CONFIGURACIÓN
 # =====================
-anno=2025; dia=9; mes=7;  hora=8; minuto=11
+anno=2025; dia=9; mes=7;  hora=8; minuto=15
 duracion=3
 #START_TIME = datetime.now()#.replace(second=0, microsecond=0) + timedelta(minutes)  # Empieza en 1 minuto desde que corre
 #START_TIME = datetime(2025,07,07,15,10)

@@ -13,9 +13,40 @@ import csv
 import os
 import requests
 import base64
+import smtplib
+from email.message import EmailMessage
 
 app = Flask(__name__)
 socketio = SocketIO(app)
+
+@app.route('/enviar_resultado')
+def enviar_resultado():
+    fecha = start_time.strftime("%y%m%d%H%M")
+    cuerpo = generar_csv(participantes)
+
+    msg = EmailMessage()
+    msg["Subject"] = f"Resultados concurso {fecha}"
+    msg["From"] = "odavalos@up.edu.mx"
+    msg["To"] = "odavalos@up.edu.mx"
+    msg.set_content("Adjunto los resultados del concurso.")
+    msg.add_attachment(cuerpo, filename=f"{fecha}.csv", subtype="csv", maintype="text")
+
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+        smtp.login("odavalos@up.edu.mx", "zxuf xfld ipen mjso")
+        smtp.send_message(msg)
+
+    return "Correo enviado"
+
+def generar_csv(participantes):
+    from io import StringIO
+    import csv
+    output = StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["Participante", "Puntos", "Penalización"])
+    for p in participantes:
+        writer.writerow([p["name"], p["score"], p["penalty"]])
+    return output.getvalue()
+
 
 # =====================
 # CONFIGURACIÓN
@@ -204,41 +235,6 @@ def ranking():
     ranking_data.sort(key=lambda x: (-x["score"], x["penalty"]))
     return jsonify(ranking_data)
 
-def guardar_informe_concurso(participantes, start_time):
-    # Formatear fecha y hora de inicio → '2507081720.csv'
-    nombre_archivo = start_time.strftime("%y%m%d%H%M") + ".csv"
-    ruta_archivo = os.path.join("informes", nombre_archivo)  # crea en carpeta 'informes/'
-
-    os.makedirs("informes", exist_ok=True)
-
-def guardar_y_subir_informe(participantes, start_time):
-    nombre_archivo = start_time.strftime("%y%m%d%H%M") + ".csv"
-    ruta = os.path.join("informes", nombre_archivo)
-
-    # Asegura que la carpeta exista
-    os.makedirs("informes", exist_ok=True)
-
-    # Escribir el CSV
-    with open(ruta, "w", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
-        writer.writerow(["Participante", "Resueltos", "Penalización", "Estado"])
-        for p in participantes:
-            fila = [
-                p["name"],
-                p["score"],
-                p["penalty"],
-                *[p["status"].get(k, "") for k in sorted(p["status"].keys())]
-            ]
-            writer.writerow(fila)
-
-    # Hacer commit y push
-    try:
-        subprocess.run(["git", "add", ruta], check=True)
-        subprocess.run(["git", "commit", "-m", f"Informe del concurso {nombre_archivo}"], check=True)
-        subprocess.run(["git", "push"], check=True)
-        print(f"Informe guardado y subido como {ruta}")
-    except subprocess.CalledProcessError as e:
-        print(f"Error al subir el informe: {e}")
 
 
 # =====================

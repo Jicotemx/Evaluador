@@ -137,6 +137,7 @@ problems = cargar_problemas_desde_latex("problemas.tex")
 
 
 def get_status():
+    global informe_subido
     now = datetime.now(LOCAL_TIMEZONE)
     if now < START_TIME:
         return "before"

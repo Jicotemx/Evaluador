@@ -36,9 +36,11 @@ informe_subido=False
 
 @app.route('/enviar_resultado')
 def enviar_resultado():
-    global informe_subido
-    if  informe_subido==True:
+  global informe_subido
+  now = datetime.now(LOCAL_TIMEZONE)  
+  if  informe_subido==True or now > START_TIME + DURATION:
        return "ya"
+  else:           
     fecha = START_TIME.strftime("%y%m%d%H%M")
     cuerpo = generar_csv(participants)
 

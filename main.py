@@ -24,8 +24,8 @@ socketio = SocketIO(app)
 # =====================
 # CONFIGURACIÓN
 # =====================
-anno=2025; dia=9; mes=7;  hora=17; minuto=14
-duracion=1
+anno=2025; dia=9; mes=7;  hora=17; minuto=27
+duracion=2
 DURATION = timedelta(minutes=duracion)  # Duración del concurso
 LOCAL_TIMEZONE = pytz.timezone("America/Mexico_City")  # Cambia según tu ubicación
 START_TIME = LOCAL_TIMEZONE.localize(datetime(year=anno, month=mes, day=dia, hour=hora, minute=minuto, second=0, microsecond=0))
@@ -237,10 +237,10 @@ def submit():
        except ValueError:
               correct=False
     if correct:
-        elapsed = int(get_elapsed_time() // 60)
+        elapsed = int(get_elapsed_time() )
         info["status"][pid] = "✔"
         info["score"] += 1
-        info["penalty"] += elapsed + 20 * (info["attempts"][pid] - 1)
+        info["penalty"] += elapsed + 5*60 * (info["attempts"][pid] - 1)
     else:
         info["status"][pid] = "✖"
 

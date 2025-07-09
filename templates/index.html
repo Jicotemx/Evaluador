@@ -137,8 +137,7 @@ function mostrarEnunciado() {
   
   if (!problemasData[pid]) return;
   
-  // Limpiar y crear elementos
-  enunciadoDiv.innerHTML = `
+    enunciadoDiv.innerHTML = `
     <div class="enunciado-container">
       <strong>Enunciado:</strong>
       <div id="math-content">${problemasData[pid].enunciado}</div>
@@ -167,6 +166,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
+document.getElementById("problemSelect").addEventListener("change", mostrarEnunciado);
+  
 function iniciarConcurso() {
   updateTimer();
   loadParticipants();
@@ -183,6 +184,8 @@ let resultadoEnviado = false;
 function updateTimer() {
   const now = new Date();
   const form = document.getElementById("submitForm");
+  const answerInput = document.getElementById("answerInput");
+  const submitButton = form.querySelector("button[type=submit]");
   const statusMsg = document.getElementById("statusMsg");
   const timerElem = document.getElementById("timer");
 
@@ -190,19 +193,21 @@ function updateTimer() {
     window.concursoStatus = "before";
     const diff = Math.floor((startTime - now) / 1000);
     timerElem.textContent = `Comienza en: ${secondsToHMS(diff)}`;
-    form.classList.add("disabled");
+    answerInput.disabled = true;
+    submitButton.disabled = true;
     statusMsg.textContent = "El concurso comenzará pronto.";
   } else if (now < new Date(startTime.getTime() + durationSeconds * 1000)) {
     window.concursoStatus = "running";
     const elapsed = Math.floor((now - startTime) / 1000);
     timerElem.textContent = `Tiempo transcurrido: ${secondsToHMS(elapsed)}`;
-    
-    form.classList.remove("disabled");
+    answerInput.disabled = false;
+    submitButton.disabled = false;
     statusMsg.textContent = "Concurso en curso";
   } else {
     window.concursoStatus = "after";
     timerElem.textContent = "Concurso finalizado.";
-    form.classList.add("disabled");
+    answerInput.disabled = true;
+    submitButton.disabled = true;
     statusMsg.textContent = "Concurso finalizado.";
     fetch("/enviar_resultado");  // Solo se llama una vez    
   }

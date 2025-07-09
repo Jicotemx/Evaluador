@@ -24,7 +24,7 @@ socketio = SocketIO(app)
 # =====================
 # CONFIGURACIÓN
 # =====================
-anno=2025; dia=9; mes=7;  hora=11; minuto=28
+anno=2025; dia=9; mes=7;  hora=11; minuto=50
 duracion=2
 DURATION = timedelta(minutes=duracion)  # Duración del concurso
 LOCAL_TIMEZONE = pytz.timezone("America/Mexico_City")  # Cambia según tu ubicación
@@ -71,12 +71,9 @@ def generar_csv(participantes):
     writer.writerow(encabezado)
 
     # Filas
-    for name, datos in participantes.items():
-        if not isinstance(datos, dict):
-            print(f"❗ Participante {name} tiene datos inválidos: {datos}")
-            continue
+    for name, datos in participantes.items():      
         fila = [name]
-        for pid in problems.keys():
+        for pid in problems:
             fila.append(datos["status"].get(pid, ""))
         fila += [datos["score"], datos["penalty"]]
         writer.writerow(fila)      

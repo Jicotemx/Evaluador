@@ -32,6 +32,7 @@ START_TIME = LOCAL_TIMEZONE.localize(datetime(year=anno, month=mes, day=dia, hou
 
 # Almacén de resultados y participantes
 participants = {}  # nombre -> info
+informe_subido=False
 
 @app.route('/enviar_resultado')
 def enviar_resultado():

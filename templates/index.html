@@ -199,7 +199,8 @@ function updateTimer() {
   } else if (now < new Date(startTime.getTime() + durationSeconds * 1000)) {
     window.concursoStatus = "running";
     const elapsed = Math.floor((now - startTime) / 1000);
-    timerElem.textContent = `Tiempo transcurrido: ${secondsToHMS(elapsed)}`;
+    const remaining = durationSeconds - elapsed;
+    timerElem.textContent = `⏱️ Transcurrido: ${secondsToHMS(elapsed)} | ⌛ Faltan: ${secondsToHMS(remaining)}`;
     answerInput.disabled = false;
     submitButton.disabled = false;
     statusMsg.textContent = "Concurso en curso";

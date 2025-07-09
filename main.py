@@ -44,13 +44,19 @@ def enviar_resultado():
     msg["From"] = "odavalos@up.edu.mx"
     msg["To"] = "odavalos@up.edu.mx"
     msg.set_content("Adjunto los resultados del concurso.")
-    msg.add_attachment(cuerpo, filename=f"{fecha}.csv", subtype="csv", maintype="text")
+
+    # Convertir el contenido a bytes
+    contenido_bytes = cuerpo.encode("utf-8")
+
+    # Adjuntar correctamente
+    msg.add_attachment(contenido_bytes, maintype="text", subtype="csv", filename=f"{fecha}.csv")
 
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
-        smtp.login("odavalos@up.edu.mx", "zxuf xfld ipen mjso")
+        smtp.login("odavalos@up.edu.mx", "zxuf xfld ipen mjso")  # Considera usar una variable de entorno
         smtp.send_message(msg)
 
     return "Correo enviado"
+
 
 def generar_csv(participantes):
     from io import StringIO

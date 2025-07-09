@@ -82,6 +82,11 @@ MathJax = {
 </div>
 
 <script>
+  window.concursoStatus = "{{ status }}";
+</script>
+
+  
+<script>
 // 1. Almacenar los problemas completos
 const problemasData = {
   {% for pid, data in problems.items() %}

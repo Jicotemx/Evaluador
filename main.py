@@ -24,7 +24,7 @@ socketio = SocketIO(app)
 # =====================
 # CONFIGURACIÓN
 # =====================
-anno=2025; dia=9; mes=7;  hora=10; minuto=32
+anno=2025; dia=9; mes=7;  hora=11; minuto=2
 duracion=2
 DURATION = timedelta(minutes=duracion)  # Duración del concurso
 LOCAL_TIMEZONE = pytz.timezone("America/Mexico_City")  # Cambia según tu ubicación
@@ -36,6 +36,9 @@ informe_subido=False
 
 @app.route('/enviar_resultado')
 def enviar_resultado():
+    global informe_subido
+    if  informe_subido==True:
+       return "ya"
     fecha = START_TIME.strftime("%y%m%d%H%M")
     cuerpo = generar_csv(participants)
 
@@ -54,7 +57,7 @@ def enviar_resultado():
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
         smtp.login("odavalos@up.edu.mx", "zxuf xfld ipen mjso")  # Considera usar una variable de entorno
         smtp.send_message(msg)
-
+    informe_subido=True: 
     return "Correo enviado"
 
 
@@ -144,7 +147,7 @@ def get_status():
         return "before"
     elif now > START_TIME + DURATION:
         if informe_subido==False:
-           guardar_y_subir_informe(participantes, startTime)
+            enviar_resultado()
            informe_subido = True
         return "after"
     else:

@@ -64,8 +64,8 @@ def generar_csv(participantes):
     output = StringIO()
     writer = csv.writer(output)
     writer.writerow(["Participante", "Puntos", "Penalización"])
-    for p in participantes:
-        writer.writerow([p["name"],p["score"], p["penalty"]])
+    for name, datos in participantes.items():
+        writer.writerow([name, datos["score"], datos["penalty"]])
     return output.getvalue()
         
 

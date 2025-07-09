@@ -24,7 +24,7 @@ socketio = SocketIO(app)
 # =====================
 # CONFIGURACIÓN
 # =====================
-anno=2025; dia=9; mes=7;  hora=11; minuto=50
+anno=2025; dia=9; mes=7;  hora=11; minuto=57
 duracion=2
 DURATION = timedelta(minutes=duracion)  # Duración del concurso
 LOCAL_TIMEZONE = pytz.timezone("America/Mexico_City")  # Cambia según tu ubicación
@@ -165,7 +165,6 @@ def get_elapsed_time():
     now = datetime.now(LOCAL_TIMEZONE)
     return max((now - START_TIME).total_seconds(), 0)
 
-participants = {}
 
 def register(name):
     if name not in participants:

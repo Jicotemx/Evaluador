@@ -123,6 +123,12 @@ function login() {
 function mostrarEnunciado() {
   const pid = document.getElementById("problemSelect").value;
   const enunciadoDiv = document.getElementById("enunciado");
+
+  // Evitar mostrar si aún no ha comenzado
+  if (window.concursoStatus == "before") {
+    enunciadoDiv.innerHTML = "<em>El concurso aún no ha comenzado.</em>";
+    return;
+  }
   
   if (!problemasData[pid]) return;
   

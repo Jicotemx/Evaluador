@@ -57,7 +57,7 @@ def enviar_resultado():
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
         smtp.login("odavalos@up.edu.mx", "zxuf xfld ipen mjso")  # Considera usar una variable de entorno
         smtp.send_message(msg)
-    informe_subido=True: 
+    informe_subido=True 
     return "Correo enviado"
 
 

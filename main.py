@@ -65,9 +65,9 @@ def generar_csv(participantes):
     writer = csv.writer(output)
     writer.writerow(["Participante", "Puntos", "Penalización"])
     for p in participantes:
-        writer.writerow([p["name"], p["score"], p["penalty"]])
+        writer.writerow([p["name"],p["score"], p["penalty"]])
     return output.getvalue()
-
+        
 
 
 
@@ -158,6 +158,7 @@ participants = {}
 def register(name):
     if name not in participants:
         participants[name] = {
+            "name"=name
             "start_time": datetime.now(),
             "responses": {},
             "attempts": {pid: 0 for pid in problems},

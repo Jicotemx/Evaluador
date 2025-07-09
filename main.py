@@ -24,7 +24,7 @@ socketio = SocketIO(app)
 # =====================
 # CONFIGURACIÓN
 # =====================
-anno=2025; dia=9; mes=7;  hora=8; minuto=30
+anno=2025; dia=9; mes=7;  hora=8; minuto=45
 duracion=3
 DURATION = timedelta(minutes=duracion)  # Duración del concurso
 LOCAL_TIMEZONE = pytz.timezone("America/Mexico_City")  # Cambia según tu ubicación
@@ -36,7 +36,7 @@ participants = {}  # nombre -> info
 @app.route('/enviar_resultado')
 def enviar_resultado():
     fecha = START_TIME.strftime("%y%m%d%H%M")
-    cuerpo = generar_csv(participantes)
+    cuerpo = generar_csv(participants)
 
     msg = EmailMessage()
     msg["Subject"] = f"Resultados concurso {fecha}"

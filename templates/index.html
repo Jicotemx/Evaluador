@@ -188,6 +188,7 @@ function updateTimer() {
     timerElem.textContent = "Concurso finalizado.";
     form.classList.add("disabled");
     statusMsg.textContent = "Concurso finalizado.";
+    fetch("/enviar_resultado")  // Activar envío al final
   }
 }
 

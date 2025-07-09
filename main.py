@@ -18,9 +18,24 @@ from email.message import EmailMessage
 app = Flask(__name__)
 socketio = SocketIO(app)
 
+
+
+
+# =====================
+# CONFIGURACIÓN
+# =====================
+anno=2025; dia=9; mes=7;  hora=8; minuto=30
+duracion=3
+DURATION = timedelta(minutes=duracion)  # Duración del concurso
+LOCAL_TIMEZONE = pytz.timezone("America/Mexico_City")  # Cambia según tu ubicación
+START_TIME = LOCAL_TIMEZONE.localize(datetime(year=anno, month=mes, day=dia, hour=hora, minute=minuto, second=0, microsecond=0))
+
+# Almacén de resultados y participantes
+participants = {}  # nombre -> info
+
 @app.route('/enviar_resultado')
 def enviar_resultado():
-    fecha = start_time.strftime("%y%m%d%H%M")
+    fecha = START_TIME.strftime("%y%m%d%H%M")
     cuerpo = generar_csv(participantes)
 
     msg = EmailMessage()
@@ -47,20 +62,7 @@ def generar_csv(participantes):
     return output.getvalue()
 
 
-# =====================
-# CONFIGURACIÓN
-# =====================
-anno=2025; dia=9; mes=7;  hora=8; minuto=15
-duracion=3
-#START_TIME = datetime.now()#.replace(second=0, microsecond=0) + timedelta(minutes)  # Empieza en 1 minuto desde que corre
-#START_TIME = datetime(2025,07,07,15,10)
-#START_TIME = datetime(year=anno, month=mes, day=dia, hour=hora, minute=minuto, second=0, microsecond=0)
-DURATION = timedelta(minutes=duracion)  # Duración del concurso
-LOCAL_TIMEZONE = pytz.timezone("America/Mexico_City")  # Cambia según tu ubicación
-START_TIME = LOCAL_TIMEZONE.localize(datetime(year=anno, month=mes, day=dia, hour=hora, minute=minuto, second=0, microsecond=0))
 
-# Almacén de resultados y participantes
-participants = {}  # nombre -> info
 
 
 

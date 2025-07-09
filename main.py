@@ -72,11 +72,14 @@ def generar_csv(participantes):
 
     # Filas
     for name, datos in participantes.items():
+        if not isinstance(datos, dict):
+            print(f"❗ Participante {name} tiene datos inválidos: {datos}")
+            continue
         fila = [name]
         for pid in problems.keys():
             fila.append(datos["status"].get(pid, ""))
         fila += [datos["score"], datos["penalty"]]
-        writer.writerow(fila)        
+        writer.writerow(fila)      
     return output.getvalue()
         
 

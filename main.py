@@ -24,7 +24,7 @@ socketio = SocketIO(app)
 # =====================
 # CONFIGURACIÓN
 # =====================
-anno=2025; dia=9; mes=7;  hora=11; minuto=2
+anno=2025; dia=9; mes=7;  hora=11; minuto=5
 duracion=2
 DURATION = timedelta(minutes=duracion)  # Duración del concurso
 LOCAL_TIMEZONE = pytz.timezone("America/Mexico_City")  # Cambia según tu ubicación
@@ -147,7 +147,7 @@ def get_status():
         return "before"
     elif now > START_TIME + DURATION:
         if informe_subido==False:
-            enviar_resultado()
+           enviar_resultado()
            informe_subido = True
         return "after"
     else:

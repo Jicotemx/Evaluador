@@ -24,7 +24,7 @@ socketio = SocketIO(app)
 # =====================
 # CONFIGURACIÓN
 # =====================
-anno=2025; dia=9; mes=7;  hora=13; minuto=18
+anno=2025; dia=9; mes=7;  hora=13; minuto=36
 duracion=2
 DURATION = timedelta(minutes=duracion)  # Duración del concurso
 LOCAL_TIMEZONE = pytz.timezone("America/Mexico_City")  # Cambia según tu ubicación
@@ -61,7 +61,7 @@ def enviar_resultado():
     return "Correo enviado"
 
 
-def generar_csv(participantes):
+def generar_csvANt(participantes):
     from io import StringIO
     import csv
     output = StringIO()
@@ -72,7 +72,7 @@ def generar_csv(participantes):
     return output.getvalue()
 
 
-def generar_csvAnter(participantes):
+def generar_csv(participantes):
     from io import StringIO
     import csv
     output = StringIO()
@@ -164,10 +164,7 @@ def get_status():
     now = datetime.now(LOCAL_TIMEZONE)
     if now < START_TIME:
         return "before"
-    elif now > START_TIME + DURATION:
-        if informe_subido==False:
-           enviar_resultado()
-           informe_subido = True
+    elif now > START_TIME + DURATION:        
         return "after"
     else:
         return "running"

@@ -187,20 +187,24 @@ function updateTimer() {
   const timerElem = document.getElementById("timer");
 
   if (now < startTime) {
+    window.concursoStatus = "before";
     const diff = Math.floor((startTime - now) / 1000);
     timerElem.textContent = `Comienza en: ${secondsToHMS(diff)}`;
     form.classList.add("disabled");
     statusMsg.textContent = "El concurso comenzará pronto.";
   } else if (now < new Date(startTime.getTime() + durationSeconds * 1000)) {
+    window.concursoStatus = "running";
     const elapsed = Math.floor((now - startTime) / 1000);
     timerElem.textContent = `Tiempo transcurrido: ${secondsToHMS(elapsed)}`;
+    
     form.classList.remove("disabled");
     statusMsg.textContent = "Concurso en curso";
   } else {
+    window.concursoStatus = "after";
     timerElem.textContent = "Concurso finalizado.";
     form.classList.add("disabled");
     statusMsg.textContent = "Concurso finalizado.";
-    
+    fetch("/enviar_resultado");  // Solo se llama una vez    
   }
   if (now >= new Date(startTime.getTime() + durationSeconds * 1000)) {
     if (!resultadoEnviado) {

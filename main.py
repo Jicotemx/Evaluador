@@ -20,8 +20,8 @@ socketio = SocketIO(app)
 # =====================
 # CONFIGURACIÓN
 # =====================
-anno=2025; dia=8; mes=7;  hora=8; minuto=44
-duracion=1000
+anno=2025; dia=9; mes=7;  hora=7; minuto=44
+duracion=3
 #START_TIME = datetime.now()#.replace(second=0, microsecond=0) + timedelta(minutes)  # Empieza en 1 minuto desde que corre
 #START_TIME = datetime(2025,07,07,15,10)
 #START_TIME = datetime(year=anno, month=mes, day=dia, hour=hora, minute=minuto, second=0, microsecond=0)
@@ -208,9 +208,17 @@ def guardar_informe_concurso(participantes, start_time):
 
     os.makedirs("informes", exist_ok=True)
 
-    with open(ruta_archivo, "w", newline="", encoding="utf-8") as f:
+def guardar_y_subir_informe(participantes, start_time):
+    nombre_archivo = start_time.strftime("%y%m%d%H%M") + ".csv"
+    ruta = os.path.join("informes", nombre_archivo)
+
+    # Asegura que la carpeta exista
+    os.makedirs("informes", exist_ok=True)
+
+    # Escribir el CSV
+    with open(ruta, "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
-        writer.writerow(["Participante", "Problemas resueltos", "Penalización", "Estado por problema"])
+        writer.writerow(["Participante", "Resueltos", "Penalización", "Estado"])
         for p in participantes:
             fila = [
                 p["name"],
@@ -219,27 +227,15 @@ def guardar_informe_concurso(participantes, start_time):
                 *[p["status"].get(k, "") for k in sorted(p["status"].keys())]
             ]
             writer.writerow(fila)
-    return ruta_archivo
 
-def subir_con_github_api(filepath, repo, token, path_en_repo="informes/"):
-    with open(filepath, "rb") as f:
-        contenido = base64.b64encode(f.read()).decode("utf-8")
-
-    nombre_archivo = os.path.basename(filepath)
-    url = f"https://api.github.com/repos/{repo}/contents/{path_en_repo}{nombre_archivo}"
-
-    r = requests.put(url, json={
-        "message": f"Agregar informe {nombre_archivo}",
-        "content": contenido
-    }, headers={
-        "Authorization": f"token {token}"
-    })
-
-    if r.status_code in (200, 201):
-        print("Archivo subido con éxito")
-    else:
-        print("Error al subir:", r.text)
-
+    # Hacer commit y push
+    try:
+        subprocess.run(["git", "add", ruta], check=True)
+        subprocess.run(["git", "commit", "-m", f"Informe del concurso {nombre_archivo}"], check=True)
+        subprocess.run(["git", "push"], check=True)
+        print(f"Informe guardado y subido como {ruta}")
+    except subprocess.CalledProcessError as e:
+        print(f"Error al subir el informe: {e}")
 
 
 # =====================

@@ -167,7 +167,8 @@ function iniciarConcurso() {
     loadRanking();
   }, 10000);
 }
-
+let resultadoEnviado = false;
+  
 function updateTimer() {
   const now = new Date();
   const form = document.getElementById("submitForm");
@@ -188,7 +189,15 @@ function updateTimer() {
     timerElem.textContent = "Concurso finalizado.";
     form.classList.add("disabled");
     statusMsg.textContent = "Concurso finalizado.";
-    fetch("/enviar_resultado")  // Activar envío al final
+    
+  }
+  if (now >= new Date(startTime.getTime() + durationSeconds * 1000)) {
+    if (!resultadoEnviado) {
+      fetch("/enviar_resultado")
+        .then(res => res.text())
+        .then(txt => console.log(txt));
+      resultadoEnviado = true;
+    }
   }
 }
 

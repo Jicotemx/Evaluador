@@ -265,24 +265,25 @@ def reevaluar_todos():
 
     # Vuelve a recorrer el historial y actualiza los valores
     for nombre, problema, respuesta, _, intento, tiempo in historial_envios:
-        if nombre not in participants or problema not in problems:
-            continue
+        #if nombre not in participants or problema not in problems:
+        #    continue
         
         p = participants[nombre]
-        p["attempts"][problema] += 1
+        participants[nombre]["attempts"][problema] += 1
         
         try:
             user_answer = float(respuesta)
             correct = abs(user_answer - float(problems[problema]["respuesta"])) < 1e-6
         except ValueError:
             correct = respuesta.strip() == str(problems[problema]["respuesta"]).strip()
-        
+        except ValueError:
+              correct=False      
         if correct and p["status"][problema] != "✔":
-            p["status"][problema] = "✔"
-            p["score"] += 1
-            p["penalty"] += tiempo + 5*60 * (intento - 1)
+            participants[nombre]["status"][problema] = "✔"
+            participants[nombre]["score"] += 1
+            participants[nombre]["penalty"] += tiempo + 5*60 * (intento - 1)
         elif not correct:
-            p["status"][problema] = "✖"
+            participants[nombre]["status"][problema] = "✖"
 
 @app.route("/admin/reevaluar", methods=["POST"])
 def admin_reevaluar():

@@ -299,14 +299,15 @@ function loadRanking() {
 }         
 </script>
 <h2>Panel de Administración</h2>
-<form method="POST" action="/admin/ejecutar_accion">
+<form id="adminForm">
   <label>Contraseña de administrador:</label><br>
   <input type="password" name="clave" required><br><br>
 
   <label>Acción a realizar:</label><br>
   <input type="checkbox" name="acciones" value="cambiar_hora"> Cambiar hora de inicio<br>
   <input type="checkbox" name="acciones" value="cambiar_duracion"> Cambiar duración<br>
-  <input type="checkbox" name="acciones" value="recargar_problemas"> Recargar o revaluar problemas<br>  
+  <input type="checkbox" name="acciones" value="recargar_problemas"> Recargar o reevaluar problemas<br>
+
   <label>Hora de inicio (formato YYYY-MM-DD HH:MM):</label><br>
   <input type="text" name="hora_inicio"><br>
 
@@ -314,9 +315,38 @@ function loadRanking() {
   <input type="number" name="duracion_min"><br><br>
 
   <button type="submit">Ejecutar</button>
+  <div id="adminMsg" style="margin-top:0.5em;color:green;"></div>
 </form>
+
 🛠️
 
-  
+ <script>
+document.getElementById("adminForm").addEventListener("submit", function(e) {
+  e.preventDefault();  // Evita el submit tradicional
+
+  const form = e.target;
+  const data = new FormData(form);
+
+  // Envía con fetch al mismo endpoint que tenías antes
+  fetch("/admin/ejecutar_accion", {
+    method: "POST",
+    body: new URLSearchParams(data)
+  })
+  .then(res => res.text())
+  .then(msg => {
+    document.getElementById("adminMsg").textContent = msg;
+
+    // Si se recargaron problemas, recarga la página para ver los cambios
+    if (data.getAll("acciones").includes("recargar_problemas")) {
+      setTimeout(() => location.reload(), 500);
+    }
+  })
+  .catch(err => {
+    document.getElementById("adminMsg").textContent = "Error en la petición";
+    console.error(err);
+  });
+});
+</script>
+ 
 </body>
 </html>

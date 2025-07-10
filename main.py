@@ -255,6 +255,44 @@ def submit():
 
     return jsonify({"message": "Respuesta recibida"})
 
+def reevaluar_todos():
+    # Reinicia estado de todos
+    for p in participants.values():
+        p["score"] = 0
+        p["penalty"] = 0
+        p["attempts"] = {pid: 0 for pid in problems}
+        p["status"] = {pid: "" for pid in problems}
+
+    # Vuelve a recorrer el historial y actualiza los valores
+    for nombre, problema, respuesta, _, intento, tiempo in historial_envios:
+        if nombre not in participants or problema not in problems:
+            continue
+        
+        p = participants[nombre]
+        p["attempts"][problema] += 1
+        
+        try:
+            user_answer = float(respuesta)
+            correct = abs(user_answer - float(problems[problema]["respuesta"])) < 1e-6
+        except ValueError:
+            correct = respuesta.strip() == str(problems[problema]["respuesta"]).strip()
+        
+        if correct and p["status"][problema] != "✔":
+            p["status"][problema] = "✔"
+            p["score"] += 1
+            p["penalty"] += tiempo + 20 * (intento - 1)
+        elif not correct:
+            p["status"][problema] = "✖"
+
+@app.route("/admin/reevaluar", methods=["POST"])
+def admin_reevaluar():
+    clave = request.form.get("clave")
+    if clave != "TU_CLAVE_ADMIN":
+        return jsonify({"error": "No autorizado"}), 403
+    
+    reevaluar_todos()
+    return jsonify({"mensaje": "Reevaluación completa"})
+
 @app.route("/status")
 def status():
     return jsonify({"status": get_status(), "time": get_elapsed_time()})
@@ -274,22 +312,35 @@ def ranking():
     ranking_data.sort(key=lambda x: (-x["score"], x["penalty"]))
     return jsonify(ranking_data)
 
-@app.route("/cambiar_duracion", methods=["POST"])
-def cambiar_duracion():
-    global duracion
-    admin_password = request.form.get("password", "")
-    ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "")
-    
-    if admin_password !=ADMIN_PASSWORD :  # Cambia a tu contraseña real
-        return jsonify({"error": "Contraseña incorrecta"})
-    
-    try:
-        minutos = int(request.form["minutos"])
-        duracion = timedelta(minutes=minutos)
-        return jsonify({"success": True, "nueva_duracion": minutos})
-    except:
-        return jsonify({"error": "Entrada inválida"})
 
+@app.route("/admin/ejecutar_accion", methods=["POST"])
+def ejecutar_accion():
+    global START_TIME, duracion, problems
+
+    clave = request.form.get("clave")
+    if clave != os.environ.get("ADMIN_PASSWORD"):
+        return "Acceso denegado", 403
+
+    acciones = request.form.getlist("acciones")
+
+    if "cambiar_hora" in acciones:
+        nueva_hora = request.form.get("hora_inicio")
+        if nueva_hora:
+            tz = pytz.timezone("America/Mexico_City")
+            START_TIME = tz.localize(datetime.strptime(nueva_hora, "%Y-%m-%d %H:%M"))
+
+    if "cambiar_duracion" in acciones:
+        duracion_min = request.form.get("duracion_min")
+        if duracion_min:
+            duracion = timedelta(minutes=int(duracion_min))
+
+    if "recargar_problemas" in acciones:
+        problems = fetc/secrets/PROBLEMAS_TEX")
+
+    if "reevaluar" in acciones:
+        reevaluar_todos()
+
+    return "Acciones ejecutadas correctamente."
 
 # =====================
 # INICIO

@@ -278,7 +278,9 @@ def ranking():
 def cambiar_duracion():
     global duracion
     admin_password = request.form.get("password", "")
-    if admin_password != "admin123":  # Cambia a tu contraseña real
+    ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "")
+    
+    if admin_password !=ADMIN_PASSWORD :  # Cambia a tu contraseña real
         return jsonify({"error": "Contraseña incorrecta"})
     
     try:

@@ -335,8 +335,7 @@ def ejecutar_accion():
             duracion = timedelta(minutes=int(duracion_min))
 
     if "recargar_problemas" in acciones:
-        problems = fetc/secrets/PROBLEMAS_TEX")
-
+        problems = cargar_problemas_desde_latex("/etc/secrets/problemas.txt")
     if "reevaluar" in acciones:
         reevaluar_todos()
 

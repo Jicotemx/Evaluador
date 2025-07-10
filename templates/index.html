@@ -326,11 +326,26 @@ document.getElementById("adminForm").addEventListener("submit", function(e) {
   const data = new URLSearchParams(new FormData(this));
   fetch("/admin/ejecutar_accion", {
     method: "POST",
-    body: data
+    body: new URLSearchParams(data)
   })
-  .then(res => res.json())
-  .then(resp => {
-    document.getElementById("adminMsg").textContent = resp.mensaje;
+.then(res => {
+  // Si no es 2xx, convertimos igualmente a JSON
+  return res.json().then(json => {
+    if (!res.ok) throw json;
+    return json;
+  });
+})
+.then(resp => {
+  document.getElementById("adminMsg").textContent = resp.mensaje;
+  if (resp.acciones.includes("recargar_problemas")) {
+    mostrarEnunciado();
+    loadRanking();
+  }
+})
+.catch(err => {
+  // err puede ser el JSON de error o cualquier otro
+  document.getElementById("adminMsg").textContent = err.error || "Error en la petición";
+});
 
     // Si recargaste o reevaluaste problemas, actualiza la vista
     if (resp.acciones.includes("recargar_problemas")) {

@@ -23,7 +23,7 @@ socketio = SocketIO(app)
 # =====================
 # CONFIGURACIÓN
 # =====================
-anno=2025; dia=10; mes=7;  hora=8; minuto=30
+anno=2025; dia=10; mes=7;  hora=8; minuto=52
 duracion=3
 DURATION = timedelta(minutes=duracion)  # Duración del concurso
 LOCAL_TIMEZONE = pytz.timezone("America/Mexico_City")  # Cambia según tu ubicación
@@ -274,6 +274,19 @@ def ranking():
     ranking_data.sort(key=lambda x: (-x["score"], x["penalty"]))
     return jsonify(ranking_data)
 
+@app.route("/cambiar_duracion", methods=["POST"])
+def cambiar_duracion():
+    global duracion
+    admin_password = request.form.get("password", "")
+    if admin_password != "admin123":  # Cambia a tu contraseña real
+        return jsonify({"error": "Contraseña incorrecta"})
+    
+    try:
+        minutos = int(request.form["minutos"])
+        duracion = timedelta(minutes=minutos)
+        return jsonify({"success": True, "nueva_duracion": minutos})
+    except:
+        return jsonify({"error": "Entrada inválida"})
 
 
 # =====================

@@ -280,7 +280,7 @@ def reevaluar_todos():
         if correct and p["status"][problema] != "✔":
             p["status"][problema] = "✔"
             p["score"] += 1
-            p["penalty"] += tiempo + 20 * (intento - 1)
+            p["penalty"] += tiempo + 5*60 * (intento - 1)
         elif not correct:
             p["status"][problema] = "✖"
 
@@ -315,8 +315,7 @@ def ranking():
 
 @app.route("/admin/ejecutar_accion", methods=["POST"])
 def ejecutar_accion():
-    global START_TIME, duracion, problems
-
+    global START_TIME, DURATION, problems
     clave = request.form.get("clave")
     if clave != os.environ.get("ADMIN_PASSWORD"):
         return "Acceso denegado", 403
@@ -332,8 +331,7 @@ def ejecutar_accion():
     if "cambiar_duracion" in acciones:
         duracion_min = request.form.get("duracion_min")
         if duracion_min:
-            duracion = timedelta(minutes=int(duracion_min))
-
+            DURATION = timedelta(minutes=int(duracion_min))         
     if "recargar_problemas" in acciones:
         problems = cargar_problemas_desde_latex("/etc/secrets/problemas.txt")
     if "reevaluar" in acciones:

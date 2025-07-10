@@ -52,7 +52,7 @@ def enviar_resultado():
 
     # Convertir el contenido a bytes
     contenido_bytes = cuerpo.encode("utf-8")
-    contenido_bytes2 = cuerpo.encode("utf-8") 
+    contenido_bytes2 = cuerpo2.encode("utf-8") 
     # Adjuntar correctamente
     msg.add_attachment(contenido_bytes, maintype="text", subtype="csv", filename=f"{fecha}.csv")
     msg.add_attachment(contenido_bytes2, maintype="text", subtype="csv", filename=f"historial_{fecha}.csv")

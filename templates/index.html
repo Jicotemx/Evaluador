@@ -322,23 +322,20 @@ function loadRanking() {
 
  <script>
 document.getElementById("adminForm").addEventListener("submit", function(e) {
-  e.preventDefault();  // Evita el submit tradicional
-
-  const form = e.target;
-  const data = new FormData(form);
-
-  // Envía con fetch al mismo endpoint que tenías antes
+  e.preventDefault();
+  const data = new URLSearchParams(new FormData(this));
   fetch("/admin/ejecutar_accion", {
     method: "POST",
-    body: new URLSearchParams(data)
+    body: data
   })
-  .then(res => res.text())
-  .then(msg => {
-    document.getElementById("adminMsg").textContent = msg;
+  .then(res => res.json())
+  .then(resp => {
+    document.getElementById("adminMsg").textContent = resp.mensaje;
 
-    // Si se recargaron problemas, recarga la página para ver los cambios
-    if (data.getAll("acciones").includes("recargar_problemas")) {
-      setTimeout(() => location.reload(), 500);
+    // Si recargaste o reevaluaste problemas, actualiza la vista
+    if (resp.acciones.includes("recargar_problemas")) {
+      mostrarEnunciado();  // Refresca el enunciado en pantalla
+      loadRanking();       // Refresca la tabla de posiciones
     }
   })
   .catch(err => {

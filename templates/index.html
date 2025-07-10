@@ -282,38 +282,28 @@ function loadRanking() {
         tbody.appendChild(row);
       });
     });
-}
-      
-   
+}         
 </script>
+<h2>Panel de Administración</h2>
+<form method="POST" action="/admin/ejecutar_accion">
+  <label>Contraseña de administrador:</label><br>
+  <input type="password" name="clave" required><br><br>
 
-<h3>Panel de administración</h3>
-<form id="formDuracion">
-  Contraseña admin: <input type="password" id="adminPass" required>
-  Nueva duración (minutos): <input type="number" id="nuevaDuracion" required>
-  <button type="submit">Cambiar duración</button>
+  <label>Acción a realizar:</label><br>
+  <input type="checkbox" name="acciones" value="cambiar_hora"> Cambiar hora de inicio<br>
+  <input type="checkbox" name="acciones" value="cambiar_duracion"> Cambiar duración<br>
+  <input type="checkbox" name="acciones" value="recargar_problemas"> Recargar problemas<br>
+  <input type="checkbox" name="acciones" value="reevaluar"> Reevaluar a todos<br><br>
+
+  <label>Hora de inicio (formato YYYY-MM-DD HH:MM):</label><br>
+  <input type="text" name="hora_inicio"><br>
+
+  <label>Duración en minutos:</label><br>
+  <input type="number" name="duracion_min"><br><br>
+
+  <button type="submit">Ejecutar</button>
 </form>
-<div id="duracionMsg"></div>
-
-<script>
-document.getElementById("formDuracion").onsubmit = e => {
-  e.preventDefault();
-  const minutos = document.getElementById("nuevaDuracion").value;
-  const password = document.getElementById("adminPass").value;
-
-  fetch("/cambiar_duracion", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: `minutos=${encodeURIComponent(minutos)}&password=${encodeURIComponent(password)}`
-  })
-  .then(res => res.json())
-  .then(data => {
-    document.getElementById("duracionMsg").textContent = data.success
-      ? `Duración actualizada a ${data.nueva_duracion} minutos`
-      : data.error || "Error al cambiar duración";
-  });
-};
-</script>
+🛠️
 
   
 </body>

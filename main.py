@@ -263,7 +263,7 @@ def submit():
     return jsonify({"message": "Respuesta recibida"})
 
 def reevaluar_todos():
-    # Reinicia estado de todos
+    #1) Reinicia estado de todos
     for p in participants.values():
         p["score"] = 0
         p["penalty"] = 0
@@ -272,25 +272,24 @@ def reevaluar_todos():
 
     # Vuelve a recorrer el historial y actualiza los valores
     for nombre, problema, respuesta, _, intento, tiempo in historial_envios:
-        #if nombre not in participants or problema not in problems:
-        #    continue
+        if nombre not in participants or problema not in problems:
+            continue
         
         p = participants[nombre]
-        participants[nombre]["attempts"][problema] += 1
+        p["attempts"][problema] += 1
         
         try:
             user_answer = float(respuesta)
             correct = abs(user_answer - float(problems[problema]["respuesta"])) < 1e-6
-        except ValueError:
-            correct = respuesta.strip() == str(problems[problema]["respuesta"]).strip()
-        except ValueError:
-              correct=False      
-        if correct and p["status"][problema] != "✔":
-            participants[nombre]["status"][problema] = "✔"
-            participants[nombre]["score"] += 1
-            participants[nombre]["penalty"] += tiempo + 5*60 * (intento - 1)
-        elif not correct:
-            participants[nombre]["status"][problema] = "✖"
+        except:
+            correct = respuesta.strip() == str(problems[problema]["respuesta"]).strip()     
+        
+      if correct and p["status"][problema] != "✔":
+             p["status"][problema]  = "✔"
+            p["score"]           += 1
+            p["penalty"]         += tiempo + 5*60 * (intento - 1)
+        elif not correcto:
+            p["status"][problema] = "✖"
 
 @app.route("/admin/reevaluar", methods=["POST"])
 def admin_reevaluar():
@@ -343,8 +342,10 @@ def ejecutar_accion():
     if "recargar_problemas" in acciones:
         problems = cargar_problemas_desde_latex("/etc/secrets/problemas.txt")    
         reevaluar_todos()
+      
+    return jsonify({"mensaje": "Hecho","acciones": acciones})
 
-    return "Acciones ejecutadas correctamente."
+    
 
 # =====================
 # INICIO

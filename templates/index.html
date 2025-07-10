@@ -180,6 +180,19 @@ function iniciarConcurso() {
   }, 10000);
 }
 let resultadoEnviado = false;
+
+function actualizarEstadoConcurso() {
+  fetch("/estado_configuracion")
+    .then(res => res.json())
+    .then(data => {
+      startTime = new Date(data.start_time);
+      durationSeconds = data.duration;
+      problemasData = data.problems;
+      mostrarEnunciado();  // para refrescar si está viendo uno
+    });
+}
+setInterval(actualizarEstadoConcurso, 10000);  // cada 10 segundos
+
   
 function updateTimer() {
   const now = new Date();

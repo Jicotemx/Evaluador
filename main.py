@@ -130,6 +130,13 @@ def login():
             return jsonify({"error": "Contraseña incorrecta"})
         return jsonify({"message": "Acceso concedido"})
 
+@app.route("/estado_configuracion")
+def estado_configuracion():
+    return jsonify({
+        "start_time": START_TIME.isoformat(),
+        "duration": int(DURATION.total_seconds()),
+        "problems": problems
+    })
 
 
 

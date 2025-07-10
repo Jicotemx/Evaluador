@@ -56,9 +56,9 @@ def enviar_resultado():
     # Adjuntar correctamente
     msg.add_attachment(contenido_bytes, maintype="text", subtype="csv", filename=f"{fecha}.csv")
     msg.add_attachment(contenido_bytes2, maintype="text", subtype="csv", filename=f"historial_{fecha}.csv")
-
+    smtp_password = os.environ.get("GMAIL_PASSWORD")
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
-        smtp.login("odavalos@up.edu.mx", "zxuf xfld ipen mjso")  # Considera usar una variable de entorno
+        smtp.login("odavalos@up.edu.mx", smtp_password)  # Considera usar una variable de entorno
         smtp.send_message(msg)
     informe_subido=True 
     return "Ya enviado o concurso no terminado"

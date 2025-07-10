@@ -11,7 +11,7 @@ import pytz
 import re
 import csv
 import os
-import base64
+import base64f
 import smtplib
 from email.message import EmailMessage
 
@@ -32,7 +32,9 @@ START_TIME = LOCAL_TIMEZONE.localize(datetime(year=anno, month=mes, day=dia, hou
 
 # Almacén de resultados y participantes
 participants = {}  # nombre -> info
+historial_envios = []  # Lista de envíos para guardar luego en historial.csv
 informe_subido=False
+
 
 @app.route('/enviar_resultado')
 def enviar_resultado():
@@ -42,7 +44,7 @@ def enviar_resultado():
   if now >= end_time and not informe_subido:         
     fecha = START_TIME.strftime("%y%m%d%H%M")
     cuerpo = generar_csv(participants)
-
+    cuerpo2 = generar_historial_csv(historial_envios)  
     msg = EmailMessage()
     msg["Subject"] = f"Resultados concurso {fecha}"
     msg["From"] = "odavalos@up.edu.mx"
@@ -51,27 +53,16 @@ def enviar_resultado():
 
     # Convertir el contenido a bytes
     contenido_bytes = cuerpo.encode("utf-8")
-
+    contenido_bytes2 = cuerpo.encode("utf-8") 
     # Adjuntar correctamente
     msg.add_attachment(contenido_bytes, maintype="text", subtype="csv", filename=f"{fecha}.csv")
+    msg.add_attachment(contenido_bytes2, maintype="text", subtype="csv", filename=f"historial_{fecha}.csv")
 
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
         smtp.login("odavalos@up.edu.mx", "zxuf xfld ipen mjso")  # Considera usar una variable de entorno
         smtp.send_message(msg)
     informe_subido=True 
     return "Ya enviado o concurso no terminado"
-
-
-def generar_csvANt(participantes):
-    from io import StringIO
-    import csv
-    output = StringIO()
-    writer = csv.writer(output)
-    writer.writerow(["Participante", "Puntos", "Penalización"])
-    for name, datos in participantes.items():
-        writer.writerow([name, datos["score"], datos["penalty"]])
-    return output.getvalue()
-
 
 def generar_csv(participantes):
     from io import StringIO
@@ -81,7 +72,6 @@ def generar_csv(participantes):
     # Encabezado
     encabezado = ["Participante"] + list(problems.keys()) + ["Puntos", "Penalización"]
     writer.writerow(encabezado)
-
     # Filas
     for p in participantes.values():
         fila = [p["name"]]
@@ -91,6 +81,22 @@ def generar_csv(participantes):
         writer.writerow(fila)     
     return output.getvalue()
         
+def generar_historial_csv(historial):
+    from io import StringIO
+    import csv
+    output = StringIO()
+    writer = csv.writer(output)
+    
+    # Encabezado
+    writer.writerow(["Nombre", "Problema", "Respuesta", "Estado", "Intento", "Tiempo"])
+
+    # Filas
+    for entrada in historial:
+        # Asumiendo que historial es una lista de tuplas o listas en orden:
+        # (nombre, problema, respuesta, estado, intento, tiempo)
+        writer.writerow(entrada)
+    
+    return output.getvalue()
 
 
 
@@ -243,6 +249,10 @@ def submit():
         info["penalty"] += elapsed + 5*60 * (info["attempts"][pid] - 1)
     else:
         info["status"][pid] = "✖"
+    estado = "aceptado" if correct else "rechazado"
+    tiempo_concurso = int(get_elapsed_time())
+    # Añadir al historial
+    historial_envios.append([name, pid, answer, estado, info["attempts"][pid], tiempo_concurso])
 
     return jsonify({"message": "Respuesta recibida"})
 

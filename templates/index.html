@@ -286,5 +286,35 @@ function loadRanking() {
       
    
 </script>
+
+<h3>Panel de administración</h3>
+<form id="formDuracion">
+  Contraseña admin: <input type="password" id="adminPass" required>
+  Nueva duración (minutos): <input type="number" id="nuevaDuracion" required>
+  <button type="submit">Cambiar duración</button>
+</form>
+<div id="duracionMsg"></div>
+
+<script>
+document.getElementById("formDuracion").onsubmit = e => {
+  e.preventDefault();
+  const minutos = document.getElementById("nuevaDuracion").value;
+  const password = document.getElementById("adminPass").value;
+
+  fetch("/cambiar_duracion", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `minutos=${encodeURIComponent(minutos)}&password=${encodeURIComponent(password)}`
+  })
+  .then(res => res.json())
+  .then(data => {
+    document.getElementById("duracionMsg").textContent = data.success
+      ? `Duración actualizada a ${data.nueva_duracion} minutos`
+      : data.error || "Error al cambiar duración";
+  });
+};
+</script>
+
+  
 </body>
 </html>

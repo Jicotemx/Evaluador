@@ -11,7 +11,6 @@ import pytz
 import re
 import csv
 import os
-import base64f
 import smtplib
 from email.message import EmailMessage
 

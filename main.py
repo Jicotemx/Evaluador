@@ -162,7 +162,7 @@ def cargar_problemas_desde_latex(archivo):
                 }
     return problemas
 
-problems = cargar_problemas_desde_latex("problemas.tex")
+problems = cargar_problemas_desde_latex("/etc/secrets/problemas.txt")
 
 
 def get_status():

@@ -325,25 +325,29 @@ def ejecutar_accion():
     global START_TIME, DURATION, problems
     clave = request.form.get("clave")
     if clave != os.environ.get("ADMIN_PASSWORD"):
-        return "Acceso denegado", 403
+        return jsonify({"error": "Acceso denegado"}), 403  # <— devolver JSON
 
     acciones = request.form.getlist("acciones")
-
+    mensajes=[]
     if "cambiar_hora" in acciones:
         nueva_hora = request.form.get("hora_inicio")
         if nueva_hora:
             tz = pytz.timezone("America/Mexico_City")
             START_TIME = tz.localize(datetime.strptime(nueva_hora, "%Y-%m-%d %H:%M"))
-
+            mensajes.append("Hora de inicio actualizada")
     if "cambiar_duracion" in acciones:
         duracion_min = request.form.get("duracion_min")
         if duracion_min:
-            DURATION = timedelta(minutes=int(duracion_min))         
+            DURATION = timedelta(minutes=int(duracion_min)) 
+            mensajes.append("Duración actualizada")
     if "recargar_problemas" in acciones:
         problems = cargar_problemas_desde_latex("/etc/secrets/problemas.txt")    
         reevaluar_todos()
-      
-    return jsonify({"mensaje": "Hecho","acciones": acciones})
+        mensajes.append("Problemas recargados y reevaluados")
+    return jsonify({
+        "mensaje": " | ".join(mensajes) if mensajes else "No se seleccionó ninguna acción",
+        "acciones": acciones
+    })
 
     
 

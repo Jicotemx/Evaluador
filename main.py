@@ -269,8 +269,7 @@ def submit():
 
 current_attempt = 1
 attempt_history = {}
-def reevaluar_todos():
-    def reevaluar_todos():
+def reevaluar_todos():   
     global current_attempt, attempt_history
     
     # 1. Guardar el estado actual antes de reiniciar

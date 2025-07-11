@@ -364,15 +364,16 @@ def ranking():
     
     ranking_data = []
     for name, info in data_source.items():
-        # Asegurarse de que el status tenga todas las claves de problemas
+        # Asegurar que el status tenga todas las claves de problemas
         status = {pid: info["status"].get(pid, "") for pid in problems}
+        
         ranking_data.append({
             "name": name,
             "score": info["score"],
             "penalty": info["penalty"],
-            "status": info["status"],
+            "status": status,  # Usar el diccionario corregido
             "attempts": info["attempts"],
-            "attempt_id": attempt_id if attempt != 'current' else current_attempt
+            "attempt_id": attempt_id
         })
 
     ranking_data.sort(key=lambda x: (-x["score"], x["penalty"]))

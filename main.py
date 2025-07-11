@@ -23,7 +23,7 @@ socketio = SocketIO(app)
 # =====================
 # CONFIGURACIÓN
 # =====================
-anno=2025; dia=11; mes=7;  hora=10; minuto=47
+anno=2025; dia=11; mes=7;  hora=11; minuto=7
 duracion=30
 DURATION = timedelta(minutes=duracion)  # Duración del concurso
 LOCAL_TIMEZONE = pytz.timezone("America/Mexico_City")  # Cambia según tu ubicación
@@ -294,7 +294,7 @@ def reevaluar_todos():
             "penalty": 0
         }
     
-    # 4. Aquí está la parte que faltaba: RE-EVALUAR TODAS LAS RESPUESTAS
+    # 4. RE-EVALUAR TODAS LAS RESPUESTAS
     for entry in historial_envios:
         nombre = entry[0]
         problema = entry[1]
@@ -323,7 +323,7 @@ def reevaluar_todos():
         else:
             if p["status"][problema] != "✔":  # Solo si no está correcto
                 p["status"][problema] = "✖"
-
+    socketio.emit('reevaluate_done', broadcast=True)
 @app.route("/admin/reevaluar", methods=["POST"])
 def admin_reevaluar():
     clave = request.form.get("clave")
@@ -352,6 +352,7 @@ def ranking():
     
     if attempt == 'current':
         data_source = participants
+        attempt_id = current_attempt
     else:
         try:
             attempt_id = int(attempt)
@@ -363,6 +364,8 @@ def ranking():
     
     ranking_data = []
     for name, info in data_source.items():
+        # Asegurarse de que el status tenga todas las claves de problemas
+        status = {pid: info["status"].get(pid, "") for pid in problems}
         ranking_data.append({
             "name": name,
             "score": info["score"],

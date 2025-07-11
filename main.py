@@ -184,7 +184,12 @@ def get_status():
 
 def get_elapsed_time():
     now = datetime.now(LOCAL_TIMEZONE)
-    return max((now - START_TIME).total_seconds(), 0)
+    if now < START_TIME:
+        return 0
+    elif now > START_TIME + DURATION:
+        return int(DURATION.total_seconds())
+    else:
+        return int((now - START_TIME).total_seconds())
 
 
 def register(name):
@@ -265,17 +270,40 @@ def submit():
 current_attempt = 1
 attempt_history = {}
 def reevaluar_todos():
+    def reevaluar_todos():
     global current_attempt, attempt_history
-    #1) Reinicia estado de todos
-    for p in participants.values():
-        p["score"] = 0
-        p["penalty"] = 0
-        p["attempts"] = {pid: 0 for pid in problems}
-        p["status"] = {pid: "" for pid in problems}
-
-    # Vuelve a recorrer el historial y actualiza los valores
-    for nombre, problema, respuesta, _, intento, tiempo in historial_envios:
-        if nombre not in participants or problema not in problems:
+    
+    # 1. Guardar el estado actual antes de reiniciar
+    attempt_history[current_attempt] = {
+        'participants': participants.copy(),
+        'historial_envios': historial_envios.copy()
+    }
+    
+    # 2. Incrementar el número de intento
+    current_attempt += 1
+    
+    # 3. Reiniciar estado de todos los participantes
+    for name in participants:
+        participants[name] = {
+            "name": name,
+            "password": participants[name]["password"],  # Mantener la contraseña
+            "start_time": datetime.now(),
+            "responses": {},
+            "attempts": {pid: 0 for pid in problems},
+            "status": {pid: "" for pid in problems},
+            "score": 0,
+            "penalty": 0
+        }
+    
+    # 4. Aquí está la parte que faltaba: RE-EVALUAR TODAS LAS RESPUESTAS
+    for entry in historial_envios:
+        nombre = entry[0]
+        problema = entry[1]
+        respuesta = entry[2]
+        intento = entry[4]
+        tiempo = entry[5]
+        
+        if nombre not in participants:
             continue
         
         p = participants[nombre]
@@ -284,15 +312,18 @@ def reevaluar_todos():
         try:
             user_answer = float(respuesta)
             correct = abs(user_answer - float(problems[problema]["respuesta"])) < 1e-6
-        except:
-            correct = respuesta.strip() == str(problems[problema]["respuesta"]).strip()     
+        except ValueError:
+            correct = respuesta.strip() == str(problems[problema]["respuesta"]).strip()
         
-        if correct and p["status"][problema] != "✔":
-            p["status"][problema]  = "✔"
-            p["score"]           += 1
-            p["penalty"]         += tiempo + 5*60 * (intento - 1)
-        elif not correct:
-            p["status"][problema] = "✖"
+        if correct:
+            if p["status"][problema] != "✔":  # Solo si no estaba ya correcto
+                p["status"][problema] = "✔"
+                p["score"] += 1
+                # Penalización: tiempo + 5 min por cada intento fallido previo
+                p["penalty"] += tiempo + 5*60 * (intento - 1)
+        else:
+            if p["status"][problema] != "✔":  # Solo si no está correcto
+                p["status"][problema] = "✖"
 
 @app.route("/admin/reevaluar", methods=["POST"])
 def admin_reevaluar():
@@ -308,21 +339,46 @@ def admin_reevaluar():
 def status():
     return jsonify({"status": get_status(), "time": get_elapsed_time()})
 
+# Nueva ruta para obtener histórico
+@app.route("/attempt_history/<int:attempt_id>")
+def get_attempt_history(attempt_id):
+    if attempt_id in attempt_history:
+        return jsonify(attempt_history[attempt_id])
+    return jsonify({"error": "Intento no encontrado"}), 404
+
+
 @app.route("/ranking")
 def ranking():
+    attempt = request.args.get('attempt', 'current')
+    
+    if attempt == 'current':
+        data_source = participants
+    else:
+        try:
+            attempt_id = int(attempt)
+            if attempt_id not in attempt_history:
+                return jsonify({"error": "Intento no válido"}), 400
+            data_source = attempt_history[attempt_id]['participants']
+        except ValueError:
+            return jsonify({"error": "Intento no válido"}), 400
+    
     ranking_data = []
-    for name, info in participants.items():
+    for name, info in data_source.items():
         ranking_data.append({
             "name": name,
             "score": info["score"],
             "penalty": info["penalty"],
             "status": info["status"],
-            "attempts": info["attempts"]
-            "attempt_id": current_attempt  # Incluir ID del intento actual
+            "attempts": info["attempts"],
+            "attempt_id": attempt_id if attempt != 'current' else current_attempt
         })
 
     ranking_data.sort(key=lambda x: (-x["score"], x["penalty"]))
-    return jsonify(ranking_data)
+    return jsonify({
+        'data': ranking_data,
+        'current_attempt': current_attempt,
+        'total_attempts': list(attempt_history.keys())
+    })
 
 @socketio.on('connect')
 def handle_connect():

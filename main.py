@@ -269,6 +269,7 @@ def submit():
 
 current_attempt = 1
 attempt_history = {}
+import copy
 def reevaluar_todos():   
     global current_attempt, attempt_history
     
@@ -277,7 +278,7 @@ def reevaluar_todos():
         'participants': participants.copy(),
         'historial_envios': historial_envios.copy()
     }
-    
+    print(f"Intento {current_attempt} guardado en historial")
     # 2. Incrementar el número de intento
     current_attempt += 1
     

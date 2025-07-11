@@ -1,6 +1,7 @@
 # evaluador_icpc_con_tiempo.py (modificado y corregido)
 
 import eventlet
+eventlet.monkey_patch() # ¡IMPORTANTE! Esta línea debe ser la primera ejecución
 import string
 import os
 import csv

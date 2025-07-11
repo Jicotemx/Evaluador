@@ -288,7 +288,7 @@ def reevaluar_todos():
             p["status"][problema]  = "✔"
             p["score"]           += 1
             p["penalty"]         += tiempo + 5*60 * (intento - 1)
-        elif not correcto:
+        elif not correct:
             p["status"][problema] = "✖"
 
 @app.route("/admin/reevaluar", methods=["POST"])

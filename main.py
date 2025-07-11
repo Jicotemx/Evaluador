@@ -388,41 +388,70 @@ def handle_connect():
     print('Cliente conectado')
 
 @app.route("/admin/ejecutar_accion", methods=["POST"])
+# Modificar la función ejecutar_accion
+@app.route("/admin/ejecutar_accion", methods=["POST"])
 def ejecutar_accion():
     global START_TIME, DURATION, problems
     clave = request.form.get("clave")
     if clave != os.environ.get("ADMIN_PASSWORD"):
-        return jsonify({"error": "Acceso denegado"}), 403  # <— devolver JSON
-
+        return jsonify({"error": "Acceso denegado"}), 403
+    
     acciones = request.form.getlist("acciones")
-    mensajes=[]
+    mensajes = []
+    
+    # Cambiar hora de inicio
     if "cambiar_hora" in acciones:
         nueva_hora = request.form.get("hora_inicio")
         if nueva_hora:
-            tz = pytz.timezone("America/Mexico_City")
-            START_TIME = tz.localize(datetime.strptime(nueva_hora, "%Y-%m-%d %H:%M"))
-            mensajes.append("Hora de inicio actualizada")
-        socketio.emit('config_update', {
-            'type': 'start_time',
-            'value': START_TIME.isoformat()
-        }, broadcast=True)
+            try:
+                tz = pytz.timezone("America/Mexico_City")
+                # Convertir a datetime y localizar
+                START_TIME = tz.localize(datetime.strptime(nueva_hora, "%Y-%m-%d %H:%M"))
+                mensajes.append("Hora de inicio actualizada")
+                
+                # Emitir actualización
+                socketio.emit('config_update', {
+                    'type': 'start_time',
+                    'value': START_TIME.isoformat()
+                }, broadcast=True)
+            except ValueError as e:
+                mensajes.append(f"Error en formato de hora: {str(e)}")
+    
+    # Cambiar duración
     if "cambiar_duracion" in acciones:
         duracion_min = request.form.get("duracion_min")
         if duracion_min:
-            DURATION = timedelta(minutes=int(duracion_min)) 
-            mensajes.append("Duración actualizada")
-        socketio.emit('config_update', {
-            'type': 'duration',
-            'value': int(DURATION.total_seconds())
-        }, broadcast=True)       
+            try:
+                DURATION = timedelta(minutes=int(duracion_min))
+                mensajes.append("Duración actualizada")
+                
+                # Emitir actualización
+                socketio.emit('config_update', {
+                    'type': 'duration',
+                    'value': int(DURATION.total_seconds())
+                }, broadcast=True)
+            except ValueError:
+                mensajes.append("Duración debe ser un número entero")
+    
+    # Recargar problemas y reevaluar
     if "recargar_problemas" in acciones:
-        problems = cargar_problemas_desde_latex("/etc/secrets/problemas.txt")    
-        reevaluar_todos()
-        mensajes.append("Problemas recargados y reevaluados")
-        socketio.emit('config_update', {
-            'type': 'problems',
-            'value': problems
-        }, broadcast=True) 
+        try:
+            # Recargar problemas desde archivo
+            problems = cargar_problemas_desde_latex("/etc/secrets/problemas.txt")
+            mensajes.append("Problemas recargados")
+            
+            # Reevaluar todos los envíos
+            reevaluar_todos()
+            mensajes.append("Reevaluación completada")
+            
+            # Emitir actualización
+            socketio.emit('config_update', {
+                'type': 'problems',
+                'value': problems
+            }, broadcast=True)
+        except Exception as e:
+            mensajes.append(f"Error recargando problemas: {str(e)}")
+    
     return jsonify({
         "mensaje": " | ".join(mensajes) if mensajes else "No se seleccionó ninguna acción",
         "acciones": acciones

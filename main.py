@@ -17,7 +17,7 @@ from io import StringIO
 # =====================
 # CONFIGURACIÓN
 # =====================
-anno, mes, dia, hora, minuto = 2025, 7, 9, 13, 18
+anno, mes, dia, hora, minuto = 2025, 7, 9, 16, 46
 LOCAL_TIMEZONE = pytz.timezone("America/Mexico_City")
 START_TIME = LOCAL_TIMEZONE.localize(datetime(year=anno, month=mes, day=dia, hour=hora, minute=minuto))
 DURATION = timedelta(minutes=2)

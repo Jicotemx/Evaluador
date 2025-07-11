@@ -6,10 +6,14 @@
   <meta charset="UTF-8">
   <title>Evaluador numérico 🧮</title>
   <style>
-    .disabled { opacity: 0.5; pointer-events: none; }
+    /* Añadir cursor para mejor UX */
+    .disabled { 
+      opacity: 0.5; 
+      pointer-events: none; 
+      cursor: not-allowed; /* Nueva regla */
+    }
     table, th, td { border: 1px solid black; border-collapse: collapse; padding: 4px; }
   </style>
-  <!-- MathJax para renderizar LaTeX -->
   <script>
     MathJax = {
       tex: {
@@ -32,37 +36,32 @@
 </head>
 <body>
 
-<!-- Login / Registro -->
 <div id="loginDiv">
   <h2>Acceso</h2>
   <input type="text" id="loginName" placeholder="Tu nombre" />
   <input type="password" id="loginPassword" placeholder="Contraseña" />
   <button onclick="login()">Entrar</button>
-  <div id="loginMsg"></div>
-</div>
+  <div id="loginMsg" aria-live="polite"></div> </div>
 
-<!-- 🧐 Main concurso -->
 <div id="mainDiv" style="display:none">
-  <div id="statusMsg"></div>
-  <div id="timer" style="font-weight:bold"></div>
+  <div id="statusMsg" aria-live="polite" style="font-weight: bold;"></div> <div id="timer" style="font-weight:bold"></div>
 
   <form id="submitForm">
     <h2>Enviar respuesta</h2>
-    <label>Nombre:</label>
+    <label for="submitName">Nombre:</label>
     <input type="text" id="submitName" readonly /><br/>
 
-    <label>Problema:</label>
+    <label for="problemSelect">Problema:</label>
     <select id="problemSelect" required onchange="mostrarEnunciado()">
       {% for pid in problems %}<option value="{{ pid }}">{{ pid }}</option>{% endfor %}
     </select><br/>
 
     <div id="enunciado" style="margin:1em 0; font-size:18px;"></div>
 
-    <label>Respuesta:</label>
+    <label for="answerInput">Respuesta:</label>
     <input type="text" id="answerInput" required /><br/>
     <button type="submit">Enviar</button>
-    <div id="submitMsg"></div>
-  </form>
+    <div id="submitMsg" aria-live="polite"></div> </form>
 
   <h3>Tabla de posiciones</h3>
   <table id="rankingTable">
@@ -78,6 +77,7 @@
 </div>
 
 <script>
+// Datos de problemas inyectados desde Flask
 const problemasData = {
   {% for pid, data in problems.items() %}
     "{{ pid }}": {
@@ -88,29 +88,69 @@ const problemasData = {
 };
 
 let startTime = new Date("{{ start_time_iso }}");
-const durationSeconds = {{ duration }};
+let durationSeconds = {{ duration }}; // 'let' para permitir cambios desde el socket
 let concursoStatus = "{{ status }}";
+
+// Inicializar Socket.IO
+const socket = io();
+
+// Manejar recarga forzada
+socket.on('force_reload', () => {
+    console.log("Recarga forzada solicitada por el servidor");
+    location.reload();
+});
+
+// Manejar actualizaciones de configuración desde el servidor
+socket.on('config_update', (data) => {
+    console.log("Configuración actualizada recibida:", data);
+    if (data.type === 'start_time') {
+        startTime = new Date(data.value);
+        updateTimer();
+    } else if (data.type === 'duration') {
+        durationSeconds = data.value;
+        updateTimer();
+    } else if (data.type === 'problems') {
+        // Podrías recargar la página o actualizar dinámicamente los selectores de problemas
+        // y re-renderizar los enunciados. Para simplicidad, una recarga completa es viable.
+        location.reload(); // Para asegurar que los problemasData se actualicen
+    }
+});
 
 function login() {
   const name = document.getElementById("loginName").value.trim();
   const password = document.getElementById("loginPassword").value.trim();
+  const loginMsgElem = document.getElementById("loginMsg"); // Referencia una vez
+
   if (!name || !password) {
-    document.getElementById("loginMsg").textContent = "Falta nombre o contraseña.";
+    loginMsgElem.textContent = "Falta nombre o contraseña.";
     return;
   }
+
   fetch("/login", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: `name=${encodeURIComponent(name)}&password=${encodeURIComponent(password)}`
-  }).then(r => r.json()).then(data => {
+  })
+  .then(response => {
+    if (!response.ok) { // Manejar errores HTTP
+        return response.json().then(err => Promise.reject(err));
+    }
+    return response.json();
+  })
+  .then(data => {
     if (data.error) {
-      document.getElementById("loginMsg").textContent = data.error;
+      loginMsgElem.textContent = data.error;
     } else {
+      loginMsgElem.textContent = "Login exitoso!"; // Mensaje de éxito
       document.getElementById("loginDiv").style.display = "none";
       document.getElementById("mainDiv").style.display = "block";
       document.getElementById("submitName").value = name;
       iniciarConcurso();
     }
+  })
+  .catch(error => {
+    console.error("Error en el login:", error);
+    loginMsgElem.textContent = error.message || "Error al intentar iniciar sesión.";
   });
 }
 
@@ -123,7 +163,11 @@ function mostrarEnunciado() {
     return;
   }
 
-  if (!problemasData[pid]) return;
+  if (!problemasData[pid]) {
+      enunciadoDiv.innerHTML = "<em>Problema no encontrado.</em>";
+      return;
+  }
+
   enunciadoDiv.innerHTML = `
     <div class="enunciado-container">
       <strong>Enunciado:</strong>
@@ -131,40 +175,37 @@ function mostrarEnunciado() {
     </div>
   `;
 
+  // Asegurar que MathJax se renderice después de que el DOM esté listo
   setTimeout(() => {
     const mathElement = document.getElementById("math-content");
-    if (mathElement) {
+    if (mathElement && typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
       MathJax.typesetPromise([mathElement]).catch(err => {
         console.error("MathJax error:", err);
       });
+    } else if (typeof MathJax === 'undefined') {
+        console.warn("MathJax no está cargado o no tiene typesetPromise.");
     }
   }, 100);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  mostrarEnunciado();
-  if (typeof MathJax === 'undefined') {
-    console.warn("MathJax no está cargado");
+  // Solo iniciar el concurso si el mainDiv está visible (después del login)
+  if (document.getElementById("mainDiv").style.display === "block") {
+      iniciarConcurso();
   }
+  mostrarEnunciado(); // Mostrar enunciado inicial (puede ser "antes del concurso")
 });
 
 function iniciarConcurso() {
   updateTimer();
   loadRanking();
-  mostrarEnunciado();
-  setInterval(() => {
-    updateTimer();
-    loadRanking();
-  }, 10000);
-}
+  mostrarEnunciado(); // Asegurarse de que el enunciado se muestre al iniciar
 
-const socket = io();
-  
-// Manejar recarga forzada
-socket.on('force_reload', () => {
-    console.log("Recarga forzada solicitada por el servidor");
-    location.reload();
-});
+  // Intervalo para actualizar el temporizador cada segundo
+  setInterval(updateTimer, 1000); 
+  // Intervalo para cargar el ranking cada 10 segundos
+  setInterval(loadRanking, 10000); 
+}
 
 // Función mejorada para actualizar el temporizador
 function updateTimer() {
@@ -173,48 +214,38 @@ function updateTimer() {
     const endTime = new Date(startTimeObj.getTime() + durationSeconds * 1000);
     
     const timerElem = document.getElementById("timer");
-    if (!timerElem) return;
+    const form = document.getElementById("submitForm");
+    const answerInput = document.getElementById("answerInput");
+    const submitButton = form ? form.querySelector("button[type=submit]") : null;
+    const statusMsg = document.getElementById("statusMsg");
+
+    if (!timerElem || !form || !answerInput || !submitButton || !statusMsg) return;
 
     if (now < startTimeObj) {
         window.concursoStatus = "before";
         const diff = Math.floor((startTimeObj - now) / 1000);
         timerElem.textContent = `Comienza en: ${secondsToHMS(diff)}`;
+        statusMsg.textContent = "El concurso comenzará pronto.";
+        answerInput.disabled = true;
+        submitButton.disabled = true;
     } else if (now < endTime) {
         window.concursoStatus = "running";
         const elapsed = Math.floor((now - startTimeObj) / 1000);
         const remaining = durationSeconds - elapsed;
         timerElem.textContent = `⏱️ Transcurrido: ${secondsToHMS(elapsed)} | ⌛ Faltan: ${secondsToHMS(remaining)}`;
+        statusMsg.textContent = "Concurso en curso";
+        answerInput.disabled = false;
+        submitButton.disabled = false;
     } else {
         window.concursoStatus = "after";
         timerElem.textContent = "Concurso finalizado.";
+        statusMsg.textContent = "Concurso finalizado.";
+        answerInput.disabled = true;
+        submitButton.disabled = true;
     }
-    
-    // Actualizar estado de los controles
-    const form = document.getElementById("submitForm");
-    if (form) {
-        const answerInput = document.getElementById("answerInput");
-        const submitButton = form.querySelector("button[type=submit]");
-        const statusMsg = document.getElementById("statusMsg");
-        
-        if (answerInput && submitButton && statusMsg) {
-            if (window.concursoStatus === "before") {
-                answerInput.disabled = true;
-                submitButton.disabled = true;
-                statusMsg.textContent = "El concurso comenzará pronto.";
-            } else if (window.concursoStatus === "running") {
-                answerInput.disabled = false;
-                submitButton.disabled = false;
-                statusMsg.textContent = "Concurso en curso";
-            } else {
-                answerInput.disabled = true;
-                submitButton.disabled = true;
-                statusMsg.textContent = "Concurso finalizado.";
-            }
-        }
-    }
+    // Asegurar que el enunciado se adapte al estado
+    mostrarEnunciado();
 }
-
-// Actualizar cada segundo
 
 function secondsToHMS(s) {
   const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
@@ -226,25 +257,64 @@ document.getElementById("submitForm").onsubmit = e => {
   const name = document.getElementById("submitName").value.trim();
   const pid = document.getElementById("problemSelect").value;
   const ans = document.getElementById("answerInput").value.trim();
+  const submitMsgElem = document.getElementById("submitMsg");
+
+  // Validación básica del lado del cliente para la respuesta
+  // Puedes expandir esto si sabes si la respuesta debe ser numérica, string, etc.
+  if (ans === "") {
+      submitMsgElem.textContent = "La respuesta no puede estar vacía.";
+      return;
+  }
+
   fetch("/submit", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: `name=${encodeURIComponent(name)}&problem=${encodeURIComponent(pid)}&answer=${encodeURIComponent(ans)}`
-  }).then(r => r.json()).then(data => {
-    document.getElementById("submitMsg").textContent = data.message || data.error || "";
+  })
+  .then(response => {
+    if (!response.ok) { // Manejar errores HTTP
+        return response.json().then(err => Promise.reject(err));
+    }
+    return response.json();
+  })
+  .then(data => {
+    submitMsgElem.textContent = data.message || data.error || "";
+    // Limpiar el campo de respuesta después de enviar
+    document.getElementById("answerInput").value = ''; 
     loadRanking();
+  })
+  .catch(error => {
+    console.error("Error al enviar respuesta:", error);
+    submitMsgElem.textContent = error.message || "Error al enviar la respuesta.";
   });
 };
 
 function loadRanking() {
-  fetch("/ranking").then(r => r.json()).then(data => {
+  fetch("/ranking")
+  .then(response => {
+    if (!response.ok) { // Manejar errores HTTP
+        return response.json().then(err => Promise.reject(err));
+    }
+    return response.json();
+  })
+  .then(data => {
     const tbody = document.querySelector("#rankingTable tbody");
     tbody.innerHTML = "";
     data.forEach(part => {
       const row = document.createElement("tr");
-      row.innerHTML = `<td>${part.name}</td>${Object.values(part.status).map(s => `<td>${s}</td>`).join("")}<td>${part.score}</td><td>${part.penalty}</td>`;
+      // Mapear los estados de los problemas y unirlos en celdas de tabla
+      const problemStatusCells = Object.keys(problemasData).map(pId => {
+          const status = part.status[pId] || ""; // Asegurarse de que el status existe
+          return `<td>${status}</td>`;
+      }).join("");
+
+      row.innerHTML = `<td>${part.name}</td>${problemStatusCells}<td>${part.score}</td><td>${part.penalty}</td>`;
       tbody.appendChild(row);
     });
+  })
+  .catch(error => {
+    console.error("Error al cargar el ranking:", error);
+    // Podrías mostrar un mensaje en el ranking table o en la consola
   });
 }
 </script>

@@ -295,17 +295,32 @@ function loadParticipants() {
 const socket = io();
 
 // Escuchar actualizaciones de configuración
+// Función para manejar actualizaciones de configuración
 socket.on('config_update', (data) => {
-    if (data.type === 'start_time') {
-        startTime = new Date(data.value);
-        updateTimer();
-    } else if (data.type === 'duration') {
-        durationSeconds = data.value;
-        updateTimer();
-    } else if (data.type === 'problems') {
-        problemasData = data.value;
-        mostrarEnunciado();
+    console.log('Evento config_update recibido:', data);
+    
+    switch(data.type) {
+        case 'start_time':
+            startTime = new Date(data.value);
+            console.log('Nueva hora de inicio:', startTime);
+            updateTimer();
+            break;
+            
+        case 'duration':
+            durationSeconds = data.value;
+            console.log('Nueva duración:', durationSeconds, 'segundos');
+            updateTimer();
+            break;
+            
+        case 'problems':
+            console.log('Problemas actualizados:', data.value);
+            problemasData = data.value;
+            mostrarEnunciado();
+            break;
     }
+    
+    // Forzar recarga del ranking
+    loadRanking();
 });
 
 // Escuchar revaluaciones completadas

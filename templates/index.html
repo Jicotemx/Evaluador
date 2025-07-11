@@ -85,7 +85,7 @@ const problemasData = {
   {% endfor %}
 };
 
-const startTime = new Date("{{ start_time_iso }}");
+let startTime = new Date("{{ start_time_iso }}");
 const durationSeconds = {{ duration }};
 let concursoStatus = "{{ status }}";
 
@@ -156,6 +156,8 @@ function iniciarConcurso() {
   }, 10000);
 }
 
+const socket = io();
+  
 // Manejar recarga forzada
 socket.on('force_reload', () => {
     console.log("Recarga forzada solicitada por el servidor");

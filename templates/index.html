@@ -330,6 +330,7 @@ socket.on('reevaluate_done', () => {
 // Ranking
 // Ranking
 function loadRanking() {
+  console.log("Cargando ranking...");
   const attemptSelect = document.getElementById("attempt-select");
   if (!attemptSelect) {
     console.error("Elemento 'attempt-select' no encontrado");
@@ -337,10 +338,18 @@ function loadRanking() {
   }
   
   const attempt = attemptSelect.value;
+  console.log("Intento seleccionado:", attempt);
   
   fetch(`/ranking?attempt=${attempt}`)
-    .then(res => res.json())
+    .then(res => {
+      if (!res.ok) {
+        throw new Error(`Error HTTP: ${res.status}`);
+      }
+      return res.json();
+    })
     .then(data => {
+      console.log("Datos recibidos:", data);
+      
       const tbody = document.querySelector("#rankingTable tbody");
       if (!tbody) {
         console.error("Elemento 'rankingTable tbody' no encontrado");
@@ -355,25 +364,40 @@ function loadRanking() {
         return;
       }
       
+      // Obtener IDs de problemas ordenados
+      const problemIds = Object.keys(problemasData).sort();
+      
       data.data.forEach(part => {
         const row = document.createElement("tr");
         
-        // Crear celdas para cada problema
-        const problemCells = Object.keys(problemsData).map(pid => {
-          const status = part.status[pid] || "";
-          return `<td>${status}</td>`;
-        }).join("");
+        // Celda de nombre
+        const nameCell = document.createElement("td");
+        nameCell.textContent = part.name;
+        row.appendChild(nameCell);
         
-        row.innerHTML = `
-          <td>${part.name}</td>
-          ${problemCells}
-          <td>${part.score}</td>
-          <td>${part.penalty}</td>
-        `;
+        // Celdas de problemas
+        problemIds.forEach(pid => {
+          const cell = document.createElement("td");
+          cell.textContent = part.status[pid] || "";
+          row.appendChild(cell);
+        });
+        
+        // Celdas de puntos y penalización
+        const scoreCell = document.createElement("td");
+        scoreCell.textContent = part.score;
+        row.appendChild(scoreCell);
+        
+        const penaltyCell = document.createElement("td");
+        penaltyCell.textContent = part.penalty;
+        row.appendChild(penaltyCell);
+        
         tbody.appendChild(row);
       });
     })
-    .catch(err => console.error("Error cargando ranking:", err));
+    .catch(err => {
+      console.error("Error cargando ranking:", err);
+      alert(`Error cargando ranking: ${err.message}`);
+    });
 }
 </script>
 <h2>Panel de Administración</h2>

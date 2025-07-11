@@ -111,7 +111,7 @@ const problemasData = {
   {% endfor %}
 };
 
-let fstartTime = new Date("{{ start_time_iso }}");
+let startTime = new Date("{{ start_time_iso }}");
 let durationSeconds = {{ duration }};
 
 function login() {
@@ -359,7 +359,7 @@ function loadRanking() {
         const row = document.createElement("tr");
         
         // Crear celdas para cada problema
-        const problemCells = Object.keys(problems).map(pid => {
+        const problemCells = Object.keys(problemsData).map(pid => {
           const status = part.status[pid] || "";
           return `<td>${status}</td>`;
         }).join("");
@@ -394,6 +394,30 @@ function loadRanking() {
 
   <button type="submit">Ejecutar</button>
   <div id="adminMsg" style="margin-top:0.5em;color:green;"></div>
+  <div id="debugInfo" style="display:none; margin-top:20px;">
+  <h3>Información de Depuración</h3>
+  <div id="debugContent"></div>
+</div>
+<script>
+// Función para mostrar información de depuración
+function showDebugInfo() {
+  const debugDiv = document.getElementById("debugInfo");
+  debugDiv.style.display = "block";
+  
+  let content = `
+    <p>Hora actual: ${new Date()}</p>
+    <p>Hora de inicio: ${startTime}</p>
+    <p>Duración: ${durationSeconds} segundos</p>
+    <p>Estado: ${window.concursoStatus}</p>
+    <p>Número de problemas: ${Object.keys(problemasData).length}</p>
+  `;
+  
+  document.getElementById("debugContent").innerHTML = content;
+}
+
+// Llamar a la función de depuración (puedes quitarlo después)
+setTimeout(showDebugInfo, 3000);
+</script>
 </form>
 
 🛠️

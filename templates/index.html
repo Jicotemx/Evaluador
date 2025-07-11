@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+  
   <meta charset="UTF-8" />
   <title>Evaluador numérico 🧮</title>
   <style>
@@ -8,6 +9,9 @@
     table, th, td { border: 1px solid black; border-collapse: collapse; padding: 4px; }
   </style>
 
+
+<script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+  
   <!-- MathJax para mostrar LaTeX -->
 <script>
 MathJax = {
@@ -68,6 +72,16 @@ MathJax = {
     <div id="submitMsg"></div>
   </form>
 
+<div class="attempt-selector">
+    <label>Ver intento:</label>
+    <select id="attempt-select">
+        <option value="current">Actual</option>
+        <!-- Opciones se llenarán dinámicamente -->
+    </select>
+</div>
+
+
+
   <h3>Tabla de posiciones</h3>
   <table id="rankingTable">
     <thead>
@@ -97,8 +111,8 @@ const problemasData = {
   {% endfor %}
 };
 
-const fstartTime = new Date("{{ start_time_iso }}");
-const durationSeconds = {{ duration }};
+let fstartTime = new Date("{{ start_time_iso }}");
+let durationSeconds = {{ duration }};
 
 function login() {
   const name = document.getElementById("loginName").value.trim();
@@ -314,26 +328,52 @@ socket.on('reevaluate_done', () => {
   
 
 // Ranking
+// Ranking
 function loadRanking() {
   const attemptSelect = document.getElementById("attempt-select");
-  const attempt = attemptSelect.value === "current" ? "current" : attemptSelect.value;
+  if (!attemptSelect) {
+    console.error("Elemento 'attempt-select' no encontrado");
+    return;
+  }
+  
+  const attempt = attemptSelect.value;
+  
   fetch(`/ranking?attempt=${attempt}`)
-        .then(res => res.json())
-        .then(data => {
-            const tbody = document.querySelector("#rankingTable tbody");
-            tbody.innerHTML = "";
-            
-            data.data.forEach(part => {
-                const row = document.createElement("tr");
-                row.innerHTML = `
-                    <td>${part.name}</td>
-                    ${Object.values(part.status).map(s => `<td>${s}</td>`).join("")}
-                    <td>${part.score}</td>
-                    <td>${part.penalty}</td>
-                `;
-                tbody.appendChild(row);
-            });
-        });
+    .then(res => res.json())
+    .then(data => {
+      const tbody = document.querySelector("#rankingTable tbody");
+      if (!tbody) {
+        console.error("Elemento 'rankingTable tbody' no encontrado");
+        return;
+      }
+      
+      tbody.innerHTML = "";
+      
+      // Verificar si la respuesta tiene la estructura esperada
+      if (!data.data || !Array.isArray(data.data)) {
+        console.error("Estructura de datos inválida:", data);
+        return;
+      }
+      
+      data.data.forEach(part => {
+        const row = document.createElement("tr");
+        
+        // Crear celdas para cada problema
+        const problemCells = Object.keys(problems).map(pid => {
+          const status = part.status[pid] || "";
+          return `<td>${status}</td>`;
+        }).join("");
+        
+        row.innerHTML = `
+          <td>${part.name}</td>
+          ${problemCells}
+          <td>${part.score}</td>
+          <td>${part.penalty}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    })
+    .catch(err => console.error("Error cargando ranking:", err));
 }
 </script>
 <h2>Panel de Administración</h2>

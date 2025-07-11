@@ -97,7 +97,7 @@ const problemasData = {
   {% endfor %}
 };
 
-const startTime = new Date("{{ start_time_iso }}");
+const fstartTime = new Date("{{ start_time_iso }}");
 const durationSeconds = {{ duration }};
 
 function login() {
@@ -277,26 +277,64 @@ function loadParticipants() {
     });
 }
 
+// Conectar a WebSockets
+const socket = io();
+
+// Escuchar actualizaciones de configuración
+socket.on('config_update', (data) => {
+    if (data.type === 'start_time') {
+        startTime = new Date(data.value);
+        updateTimer();
+    } else if (data.type === 'duration') {
+        durationSeconds = data.value;
+        updateTimer();
+    } else if (data.type === 'problems') {
+        problemasData = data.value;
+        mostrarEnunciado();
+    }
+});
+
+// Escuchar revaluaciones completadas
+socket.on('reevaluate_done', () => {
+    loadRanking();
+    // Actualizar selector de intentos
+    fetch("/ranking")
+        .then(res => res.json())
+        .then(data => {
+            const selector = document.getElementById("attempt-select");
+            selector.innerHTML = '<option value="current">Actual</option>';
+            data.total_attempts.forEach(attempt => {
+                const option = document.createElement("option");
+                option.value = attempt;
+                option.textContent = `Intento ${attempt}`;
+                selector.appendChild(option);
+            });
+        });
+});
+  
 
 // Ranking
 function loadRanking() {
-  fetch("/ranking")
-    .then(res => res.json())
-    .then(data => {
-      const tbody = document.querySelector("#rankingTable tbody");
-      tbody.innerHTML = "";
-      data.forEach(part => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${part.name}</td>
-          ${Object.values(part.status).map(s => `<td>${s}</td>`).join("")}
-          <td>${part.score}</td>
-          <td>${part.penalty}</td>
-        `;
-        tbody.appendChild(row);
-      });
-    });
-}         
+  const attemptSelect = document.getElementById("attempt-select");
+  const attempt = attemptSelect.value === "current" ? "current" : attemptSelect.value;
+  fetch(`/ranking?attempt=${attempt}`)
+        .then(res => res.json())
+        .then(data => {
+            const tbody = document.querySelector("#rankingTable tbody");
+            tbody.innerHTML = "";
+            
+            data.data.forEach(part => {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${part.name}</td>
+                    ${Object.values(part.status).map(s => `<td>${s}</td>`).join("")}
+                    <td>${part.score}</td>
+                    <td>${part.penalty}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        });
+}
 </script>
 <h2>Panel de Administración</h2>
 <form id="adminForm">

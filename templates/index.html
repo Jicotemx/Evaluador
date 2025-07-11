@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+  <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
+
   <meta charset="UTF-8">
   <title>Evaluador numérico 🧮</title>
   <style>
@@ -213,7 +215,6 @@ function updateTimer() {
 }
 
 // Actualizar cada segundo
-setInterval(updateTimer, 1000);
 
 function secondsToHMS(s) {
   const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;

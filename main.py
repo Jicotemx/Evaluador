@@ -17,7 +17,7 @@ from io import StringIO
 # =====================
 # CONFIGURACIÓN
 # =====================
-anno, mes, dia, hora, minuto = 2025, 7, 9, 16, 56
+anno, mes, dia, hora, minuto = 2025, 7, 9, 17, 6
 LOCAL_TIMEZONE = pytz.timezone("America/Mexico_City")
 START_TIME = LOCAL_TIMEZONE.localize(datetime(year=anno, month=mes, day=dia, hour=hora, minute=minuto))
 DURATION = timedelta(minutes=2)
@@ -73,21 +73,52 @@ def get_elapsed_time():
     now = datetime.now(LOCAL_TIMEZONE)
     return max((now - START_TIME).total_seconds(), 0)
 
-def guardar_historial_csv(historial, fecha):
-    nombre_archivo = f"historial_{fecha}.csv"
-    with open(nombre_archivo, "w", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
-        writer.writerow(["Nombre", "Problema", "Respuesta", "Estado", "Intento", "Tiempo"])
-        writer.writerows(historial)
-    return nombre_archivo
+# Mover estas funciones ANTES de enviar_resultado
 
 def generar_csv(participantes):
+    from io import StringIO
+    import csv
     output = StringIO()
     writer = csv.writer(output)
-    writer.writerow(["Participante"] + list(problems.keys()) + ["Puntos", "Penalización"])
-    for p in participants.values():
-        fila = [p["name"]] + [p["status"].get(pid, "") for pid in problems] + [p["score"], p["penalty"]]
-        writer.writerow(fila)
+    # Encabezado
+    encabezado = ["Participante"] + list(problems.keys()) + ["Puntos", "Penalización"]
+    writer.writerow(encabezado)
+    # Filas
+    for p in participantes.values():
+        fila = [p["name"]]
+        for pid in problems:
+            fila.append(p["status"].get(pid, ""))
+        fila += [p["score"], p["penalty"]]
+        writer.writerow(fila)     
+    return output.getvalue()
+        
+# Versión corregida
+def generar_historial_csv(historial):
+    from io import StringIO
+    import csv
+    output = StringIO()
+    writer = csv.writer(output)
+    
+    # Encabezado
+    writer.writerow(["Nombre", "Problema", "Respuesta", "Estado", "Intento", "Tiempo"])
+
+    # Filas - asegurarse de que cada entrada sea una lista/iterable
+    for entrada in historial:
+        if isinstance(entrada, (list, tuple)):
+            writer.writerow(entrada)
+        else:
+            # Convertir a lista si es necesario
+            writer.writerow([
+                entrada[0],  # nombre
+                entrada[1],  # problema
+                entrada[2],  # respuesta
+                entrada[3],  # estado
+                entrada[4],  # intento
+                entrada[5]   # tiempo
+            ])
+    
+    return output.getvalue()
+    
     return output.getvalue()
 
 @app.route('/enviar_resultado')
@@ -106,7 +137,7 @@ def enviar_resultado():
     try:
         fecha = START_TIME.strftime("%y%m%d%H%M")
         cuerpo = generar_csv(participants)
-        cuerpo2 = generar_historial_csv(historial_envios)  
+        cuerpo2 = generar_historial_csv(historial_envios)        
         msg = EmailMessage()
         msg["Subject"] = f"Resultados concurso {fecha}"
         msg["From"] = "odavalos@up.edu.mx"

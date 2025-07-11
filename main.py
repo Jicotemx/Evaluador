@@ -284,7 +284,7 @@ def reevaluar_todos():
         except:
             correct = respuesta.strip() == str(problems[problema]["respuesta"]).strip()     
         
-      if correct and p["status"][problema] != "✔":
+        if correct and p["status"][problema] != "✔":
              p["status"][problema]  = "✔"
             p["score"]           += 1
             p["penalty"]         += tiempo + 5*60 * (intento - 1)

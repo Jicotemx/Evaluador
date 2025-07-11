@@ -156,32 +156,62 @@ function iniciarConcurso() {
   }, 10000);
 }
 
+// Manejar recarga forzada
+socket.on('force_reload', () => {
+    console.log("Recarga forzada solicitada por el servidor");
+    location.reload();
+});
+
+// Función mejorada para actualizar el temporizador
 function updateTimer() {
-  const now = new Date();
-  const form = document.getElementById("submitForm");
-  const statusMsg = document.getElementById("statusMsg");
-  const timerElem = document.getElementById("timer");
+    const now = new Date();
+    const startTimeObj = new Date(startTime);
+    const endTime = new Date(startTimeObj.getTime() + durationSeconds * 1000);
+    
+    const timerElem = document.getElementById("timer");
+    if (!timerElem) return;
 
-  const endTime = new Date(startTime.getTime() + durationSeconds * 1000);
-  const remaining = Math.max(0, Math.floor((endTime - now) / 1000));
-
-  if (now < startTime) {
-    concursoStatus = "before";
-    statusMsg.textContent = "El concurso comenzará pronto.";
-    timerElem.textContent = `Inicio en: ${secondsToHMS(Math.floor((startTime-now)/1000))}`;
-    form.classList.add("disabled");
-  } else if (now < endTime) {
-    concursoStatus = "running";
-    statusMsg.textContent = "Concurso en curso.";
-    timerElem.textContent = `Tiempo: ${secondsToHMS(Math.floor((now-startTime)/1000))} | Faltan: ${secondsToHMS(remaining)}`;
-    form.classList.remove("disabled");
-  } else {
-    concursoStatus = "after";
-    statusMsg.textContent = "Concurso finalizado.";
-    timerElem.textContent = "Finalizado";
-    form.classList.add("disabled");
-  }
+    if (now < startTimeObj) {
+        window.concursoStatus = "before";
+        const diff = Math.floor((startTimeObj - now) / 1000);
+        timerElem.textContent = `Comienza en: ${secondsToHMS(diff)}`;
+    } else if (now < endTime) {
+        window.concursoStatus = "running";
+        const elapsed = Math.floor((now - startTimeObj) / 1000);
+        const remaining = durationSeconds - elapsed;
+        timerElem.textContent = `⏱️ Transcurrido: ${secondsToHMS(elapsed)} | ⌛ Faltan: ${secondsToHMS(remaining)}`;
+    } else {
+        window.concursoStatus = "after";
+        timerElem.textContent = "Concurso finalizado.";
+    }
+    
+    // Actualizar estado de los controles
+    const form = document.getElementById("submitForm");
+    if (form) {
+        const answerInput = document.getElementById("answerInput");
+        const submitButton = form.querySelector("button[type=submit]");
+        const statusMsg = document.getElementById("statusMsg");
+        
+        if (answerInput && submitButton && statusMsg) {
+            if (window.concursoStatus === "before") {
+                answerInput.disabled = true;
+                submitButton.disabled = true;
+                statusMsg.textContent = "El concurso comenzará pronto.";
+            } else if (window.concursoStatus === "running") {
+                answerInput.disabled = false;
+                submitButton.disabled = false;
+                statusMsg.textContent = "Concurso en curso";
+            } else {
+                answerInput.disabled = true;
+                submitButton.disabled = true;
+                statusMsg.textContent = "Concurso finalizado.";
+            }
+        }
+    }
 }
+
+// Actualizar cada segundo
+setInterval(updateTimer, 1000);
 
 function secondsToHMS(s) {
   const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;

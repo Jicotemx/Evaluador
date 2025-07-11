@@ -23,7 +23,7 @@ socketio = SocketIO(app)
 # =====================
 # CONFIGURACIÓN
 # =====================
-anno=2025; dia=11; mes=7;  hora=9; minuto=27
+anno=2025; dia=11; mes=7;  hora=10; minuto=47
 duracion=30
 DURATION = timedelta(minutes=duracion)  # Duración del concurso
 LOCAL_TIMEZONE = pytz.timezone("America/Mexico_City")  # Cambia según tu ubicación

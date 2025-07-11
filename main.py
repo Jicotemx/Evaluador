@@ -262,7 +262,10 @@ def submit():
 
     return jsonify({"message": "Respuesta recibida"})
 
+current_attempt = 1
+attempt_history = {}
 def reevaluar_todos():
+    global current_attempt, attempt_history
     #1) Reinicia estado de todos
     for p in participants.values():
         p["score"] = 0
@@ -298,7 +301,8 @@ def admin_reevaluar():
         return jsonify({"error": "No autorizado"}), 403
     
     reevaluar_todos()
-    return jsonify({"mensaje": "Reevaluación completa"})
+    socketio.emit('reevaluate_done', broadcast=True)  # Notificar a todos
+    return jsonify({"mensaje": "Reevaluación completa"})    
 
 @app.route("/status")
 def status():
@@ -314,11 +318,15 @@ def ranking():
             "penalty": info["penalty"],
             "status": info["status"],
             "attempts": info["attempts"]
+            "attempt_id": current_attempt  # Incluir ID del intento actual
         })
 
     ranking_data.sort(key=lambda x: (-x["score"], x["penalty"]))
     return jsonify(ranking_data)
 
+@socketio.on('connect')
+def handle_connect():
+    print('Cliente conectado')
 
 @app.route("/admin/ejecutar_accion", methods=["POST"])
 def ejecutar_accion():
@@ -335,15 +343,27 @@ def ejecutar_accion():
             tz = pytz.timezone("America/Mexico_City")
             START_TIME = tz.localize(datetime.strptime(nueva_hora, "%Y-%m-%d %H:%M"))
             mensajes.append("Hora de inicio actualizada")
+        socketio.emit('config_update', {
+            'type': 'start_time',
+            'value': START_TIME.isoformat()
+        }, broadcast=True)
     if "cambiar_duracion" in acciones:
         duracion_min = request.form.get("duracion_min")
         if duracion_min:
             DURATION = timedelta(minutes=int(duracion_min)) 
             mensajes.append("Duración actualizada")
+        socketio.emit('config_update', {
+            'type': 'duration',
+            'value': int(DURATION.total_seconds())
+        }, broadcast=True)       
     if "recargar_problemas" in acciones:
         problems = cargar_problemas_desde_latex("/etc/secrets/problemas.txt")    
         reevaluar_todos()
         mensajes.append("Problemas recargados y reevaluados")
+        socketio.emit('config_update', {
+            'type': 'problems',
+            'value': problems
+        }, broadcast=True) 
     return jsonify({
         "mensaje": " | ".join(mensajes) if mensajes else "No se seleccionó ninguna acción",
         "acciones": acciones

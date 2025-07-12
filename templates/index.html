@@ -154,19 +154,47 @@ function login() {
   });
 }
 
+// Función modificada para mostrar el enunciado y renderizar MathJax
 function mostrarEnunciado() {
-  const pid = document.getElementById("problemSelect").value;
-  const enunciadoDiv = document.getElementById("enunciado");
+    const pid = document.getElementById("problemSelect").value;
+    const enunciadoDiv = document.getElementById("enunciado");
 
-  if (concursoStatus === "before") {
-    enunciadoDiv.innerHTML = "<em>El concurso aún no ha comenzado.</em>";
-    return;
-  }
+    let newEnunciadoContent = "";
 
-  if (!problemasData[pid]) {
-      enunciadoDiv.innerHTML = "<em>Problema no encontrado.</em>";
-      return;
-  }
+    if (window.concursoStatus === "before") {
+        newEnunciadoContent = "<em>El concurso aún no ha comenzado.</em>";
+    } else if (!problemasData[pid]) {
+        newEnunciadoContent = "<em>Problema no encontrado.</em>";
+    } else {
+        newEnunciadoContent = `
+            <div class="enunciado-container">
+                <strong>Enunciado:</strong>
+                <div id="math-content">${problemasData[pid].enunciado}</div>
+            </div>
+        `;
+    }
+
+    // Solo actualiza el DOM y MathJax si el contenido del enunciado ha cambiado
+    if (newEnunciadoContent !== currentEnunciadoHtml || pid !== currentProblemId) {
+        enunciadoDiv.innerHTML = newEnunciadoContent;
+        currentEnunciadoHtml = newEnunciadoContent; // Guarda el contenido actual
+        currentProblemId = pid; // Guarda el ID del problema actual
+
+        // Asegurar que MathJax se renderice después de que el DOM esté listo
+        // y solo si hay contenido MathJax potencial
+        const mathContentContainer = document.getElementById("math-content");
+        if (mathContentContainer && typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+            // Usa typesetClear para limpiar y luego typesetPromise para renderizar el nuevo contenido
+            MathJax.typesetClear([mathContentContainer]); // Limpia el contenido anterior de MathJax
+            MathJax.typesetPromise([mathContentContainer]).catch(err => {
+                console.error("MathJax error:", err);
+            });
+        } else if (typeof MathJax === 'undefined') {
+            console.warn("MathJax no está cargado o no tiene typesetPromise.");
+        }
+    }
+}
+
 
   enunciadoDiv.innerHTML = `
     <div class="enunciado-container">
@@ -196,18 +224,27 @@ document.addEventListener("DOMContentLoaded", () => {
   mostrarEnunciado(); // Mostrar enunciado inicial (puede ser "antes del concurso")
 });
 
+// Variables para controlar la renderización de MathJax y el enunciado
+let currentProblemId = null;
+let currentEnunciadoHtml = null;
+
+  
 function iniciarConcurso() {
-  updateTimer();
-  loadRanking();
-  mostrarEnunciado(); // Asegurarse de que el enunciado se muestre al iniciar
+  updateTimer(); // Primera actualización del temporizador
+  loadRanking(); // Primera carga del ranking
+  // mostrarEnunciado(); // Esta llamada inicial puede ser redundante si ya se llamó en DOMContentLoaded
 
   // Intervalo para actualizar el temporizador cada segundo
   setInterval(updateTimer, 1000); 
   // Intervalo para cargar el ranking cada 10 segundos
   setInterval(loadRanking, 10000); 
+  
+  // No llamar a mostrarEnunciado aquí si ya se llama en DOMContentLoaded
+  // y solo debe renderizar cuando cambie el problema seleccionado o el estado.
 }
 
-// Función mejorada para actualizar el temporizador
+
+// Función mejorada para actualizar el temporizador (sin llamar directamente a mostrarEnunciado)
 function updateTimer() {
     const now = new Date();
     const startTimeObj = new Date(startTime);
@@ -221,15 +258,16 @@ function updateTimer() {
 
     if (!timerElem || !form || !answerInput || !submitButton || !statusMsg) return;
 
+    let newConcursoStatus;
     if (now < startTimeObj) {
-        window.concursoStatus = "before";
+        newConcursoStatus = "before";
         const diff = Math.floor((startTimeObj - now) / 1000);
         timerElem.textContent = `Comienza en: ${secondsToHMS(diff)}`;
         statusMsg.textContent = "El concurso comenzará pronto.";
         answerInput.disabled = true;
         submitButton.disabled = true;
     } else if (now < endTime) {
-        window.concursoStatus = "running";
+        newConcursoStatus = "running";
         const elapsed = Math.floor((now - startTimeObj) / 1000);
         const remaining = durationSeconds - elapsed;
         timerElem.textContent = `⏱️ Transcurrido: ${secondsToHMS(elapsed)} | ⌛ Faltan: ${secondsToHMS(remaining)}`;
@@ -237,14 +275,18 @@ function updateTimer() {
         answerInput.disabled = false;
         submitButton.disabled = false;
     } else {
-        window.concursoStatus = "after";
+        newConcursoStatus = "after";
         timerElem.textContent = "Concurso finalizado.";
         statusMsg.textContent = "Concurso finalizado.";
         answerInput.disabled = true;
         submitButton.disabled = true;
     }
-    // Asegurar que el enunciado se adapte al estado
-    mostrarEnunciado();
+
+    // Solo actualiza el estado si ha cambiado
+    if (newConcursoStatus !== window.concursoStatus) {
+        window.concursoStatus = newConcursoStatus;
+        mostrarEnunciado(); // Llama a mostrarEnunciado solo si el estado del concurso cambia
+    }
 }
 
 function secondsToHMS(s) {

@@ -465,6 +465,14 @@ def index():
         logged_in_user=logged_in_user # Pasar el usuario logueado
     )
 
+@app.route("/admin")
+def admin_panel():
+    # En un entorno real, aquí deberías añadir una capa de autenticación
+    # para asegurarte de que solo los administradores puedan acceder a esta página.
+    # Por ahora, simplemente la renderizamos.
+    return render_template("admin.html")
+
+
 @app.route('/enviar_resultado')
 def enviar_resultado_route():
     global informe_subido

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de Administración - Evaluador Numérico</title>
+    <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        .container { max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+        input[type="password"], input[type="datetime-local"], input[type="number"] {
+            width: calc(100% - 22px);
+            padding: 8px;
+            margin: 5px 0 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover { background-color: #0056b3; }
+        .message { margin-top: 15px; padding: 10px; border-radius: 4px; }
+        .success { background-color: #d4edda; color: #155724; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; color: #721c24; border-color: #f5c6cb; }
+        label { display: block; margin-top: 10px; }
+        .checkbox-group { margin-bottom: 15px; }
+        .checkbox-group label { display: inline-block; margin-right: 15px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Panel de Administración</h1>
+
+        <form id="adminForm">
+            <label for="adminKey">Contraseña de Administrador:</label>
+            <input type="password" id="adminKey" required><br>
+
+            <h2>Acciones</h2>
+            <div class="checkbox-group">
+                <label><input type="checkbox" name="acciones" value="cambiar_hora" id="chkChangeTime"> Cambiar Hora de Inicio</label>
+                <input type="datetime-local" id="newStartTime" disabled><br>
+
+                <label><input type="checkbox" name="acciones" value="cambiar_duracion" id="chkChangeDuration"> Cambiar Duración (minutos)</label>
+                <input type="number" id="newDuration" min="1" disabled><br>
+
+                <label><input type="checkbox" name="acciones" value="recargar_problemas" id="chkReloadProblems"> Recargar Problemas y Reevaluar</label><br>
+            </div>
+            
+            <button type="submit">Ejecutar Acciones</button>
+            <button type="button" onclick="goToPlayerPage()">Ir a Página de Jugador</button>
+            <button type="button" onclick="sendResultEmail()">Enviar Correo de Resultados</button>
+        </form>
+
+        <div id="adminMessage" class="message" aria-live="polite"></div>
+    </div>
+
+    <script>
+        const socket = io(); // Conectar Socket.IO
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Habilitar/deshabilitar campos de entrada según las casillas
+            document.getElementById('chkChangeTime').addEventListener('change', function() {
+                document.getElementById('newStartTime').disabled = !this.checked;
+                // Opcional: establecer la hora actual si se habilita
+                if (this.checked) {
+                    const now = new Date();
+                    const offset = now.getTimezoneOffset() * 60000; // offset in milliseconds
+                    const localIsoString = (new Date(now - offset)).toISOString().slice(0, -8);
+                    document.getElementById('newStartTime').value = localIsoString;
+                }
+            });
+            document.getElementById('chkChangeDuration').addEventListener('change', function() {
+                document.getElementById('newDuration').disabled = !this.checked;
+            });
+        });
+
+        document.getElementById('adminForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const adminKey = document.getElementById('adminKey').value;
+            const selectedActions = Array.from(document.querySelectorAll('input[name="acciones"]:checked')).map(cb => cb.value);
+            const newStartTime = document.getElementById('newStartTime').value;
+            const newDuration = document.getElementById('newDuration').value;
+            const adminMessageDiv = document.getElementById('adminMessage');
+
+            if (selectedActions.length === 0) {
+                adminMessageDiv.textContent = 'Selecciona al menos una acción.';
+                adminMessageDiv.className = 'message error';
+                return;
+            }
+
+            const formData = new URLSearchParams();
+            formData.append('clave', adminKey);
+            selectedActions.forEach(action => formData.append('acciones', action));
+            if (selectedActions.includes('cambiar_hora')) {
+                formData.append('hora_inicio', newStartTime);
+            }
+            if (selectedActions.includes('cambiar_duracion')) {
+                formData.append('duracion_min', newDuration);
+            }
+
+            fetch('/admin/ejecutar_accion', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: formData.toString()
+            })
+            .then(response => response.json())
+            .then(data => {
+                adminMessageDiv.textContent = data.mensaje;
+                adminMessageDiv.className = data.error ? 'message error' : 'message success';
+                if (data.error) {
+                    console.error("Error del administrador:", data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                adminMessageDiv.textContent = 'Error al comunicar con el servidor: ' + error.message;
+                adminMessageDiv.className = 'message error';
+            });
+        });
+
+        function sendResultEmail() {
+            const adminKey = document.getElementById('adminKey').value;
+            const adminMessageDiv = document.getElementById('adminMessage');
+
+            // Podrías añadir una validación de la clave aquí antes de enviar
+            // o simplemente dejar que el backend la valide.
+            
+            fetch('/enviar_resultado', {
+                method: 'GET', // o POST si la proteges con la clave admin
+                // headers: { 'X-Admin-Key': adminKey } // Si quieres pasar la clave en un header
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => Promise.reject(text));
+                }
+                return response.text();
+            })
+            .then(message => {
+                adminMessageDiv.textContent = message;
+                adminMessageDiv.className = 'message success';
+            })
+            .catch(error => {
+                adminMessageDiv.textContent = 'Error al enviar el correo: ' + error;
+                adminMessageDiv.className = 'message error';
+            });
+        }
+
+        function goToPlayerPage() {
+            window.location.href = '/'; // Redirige a la página principal del jugador
+        }
+    </script>
+</body>
+</html>

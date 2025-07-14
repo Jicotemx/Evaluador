@@ -32,28 +32,29 @@
 <body>
 
 <div id="loginDiv">
-  <h2>Acceso</h2>
-  <input type="text" id="loginName" placeholder="Tu nombre" />
+  <h2>Acceso Participante</h2> <input type="text" id="loginName" placeholder="Tu nombre" />
   <input type="password" id="loginPassword" placeholder="Contraseña" />
   <button onclick="login()">Entrar</button>
   <p id="loginMessage" style="color: red;"></p>
-</div>
+  <hr>
+  <p>¿Eres administrador? <a href="/admin">Acceder al Panel de Administración</a></p> </div>
 
 <div id="mainContent" style="display: none;">
   <h2>¡Bienvenido, <span id="userNameDisplay"></span>!</h2>
   <button id="logoutButton">Salir</button> 
 
   <p>Tiempo restante: <span id="timeRemaining"></span></p>
-  <p id="contestStatus"></p>
+  <p>Tiempo transcurrido: <span id="elapsedTime"></span></p> <p id="contestStatus"></p>
 
   <h3>Problemas</h3>
-  <div id="problemsList">
+  <form id="problemDisplayForm"> <label for="problemSelect">Seleccionar Problema:</label>
+    <select id="problemSelect"></select><br>
+  </form>
+  <div id="problemEnunciado">
     </div>
 
   <h3>Enviar Respuesta</h3>
   <form id="submitForm">
-    <label for="problemSelect">Problema:</label>
-    <select id="problemSelect"></select><br>
     <label for="answerInput">Tu Respuesta:</label>
     <input type="text" id="answerInput" placeholder="Ej: 3.14159 o tu respuesta exacta" /><br>
     <button type="submit" id="submitButton">Enviar</button>
@@ -112,7 +113,7 @@
       });
   }
 
-  // NUEVO: Manejador del botón de Salir
+  // Manejador del botón de Salir
   document.getElementById("logoutButton").addEventListener("click", () => {
       fetch("/logout", {
           method: "POST"
@@ -146,37 +147,59 @@
         contestStartTime = new Date(data.start_time);
         contestDurationSeconds = data.duration;
         currentProblems = data.problems;
-        updateProblemSelect(currentProblems);
+        updateProblemSelect(currentProblems); // Actualiza el select y muestra el primer problema
         updateContestDisplay();
       })
       .catch(error => console.error('Error fetching contest config:', error));
   }
 
+  // NUEVO: Función para mostrar solo un problema seleccionado
+  function displayProblem(pid) {
+    const problemEnunciadoDiv = document.getElementById("problemEnunciado");
+    problemEnunciadoDiv.innerHTML = ""; // Limpiar contenido anterior
+
+    if (pid && currentProblems[pid]) {
+        const p = document.createElement("p");
+        p.innerHTML = `<strong>Problema ${pid}:</strong> ${currentProblems[pid].enunciado}`;
+        problemEnunciadoDiv.appendChild(p);
+    } else {
+        problemEnunciadoDiv.textContent = "Selecciona un problema para ver su enunciado.";
+    }
+
+    // Renderizar MathJax de nuevo si está disponible para el nuevo contenido
+    if (typeof MathJax !== 'undefined') {
+      MathJax.typesetPromise().then(() => {
+        // console.log('MathJax rendering complete for single problem.');
+      });
+    }
+  }
+
+  // Actualiza el select de problemas y establece el evento change
   function updateProblemSelect(problems) {
     const select = document.getElementById("problemSelect");
     select.innerHTML = "";
-    for (const pid in problems) {
+    
+    // Obtener las IDs de los problemas y ordenarlas alfabéticamente
+    const sortedPids = Object.keys(problems).sort();
+
+    sortedPids.forEach(pid => {
       const option = document.createElement("option");
       option.value = pid;
       option.textContent = `Problema ${pid}`;
       select.appendChild(option);
-    }
-    renderProblems(problems); // Re-render problems for MathJax
-  }
+    });
 
-  function renderProblems(problems) {
-    const problemsListDiv = document.getElementById("problemsList");
-    problemsListDiv.innerHTML = "";
-    for (const pid in problems) {
-      const p = document.createElement("p");
-      p.innerHTML = `<strong>${pid}:</strong> ${problems[pid].enunciado}`;
-      problemsListDiv.appendChild(p);
-    }
-    // Renderizar MathJax de nuevo si está disponible
-    if (typeof MathJax !== 'undefined') {
-      MathJax.typesetPromise().then(() => {
-        // console.log('MathJax rendering complete for problems.');
-      });
+    // Añadir el evento listener para cambiar el problema mostrado
+    select.addEventListener("change", () => {
+        displayProblem(select.value);
+    });
+
+    // Mostrar el primer problema por defecto si hay alguno
+    if (sortedPids.length > 0) {
+        select.value = sortedPids[0]; // Establecer el primer problema como seleccionado
+        displayProblem(sortedPids[0]); // Mostrar su enunciado
+    } else {
+        displayProblem(null); // No hay problemas para mostrar
     }
   }
 
@@ -184,23 +207,31 @@
       const now = new Date();
       const endTime = new Date(contestStartTime.getTime() + contestDurationSeconds * 1000);
       const timeRemainingSpan = document.getElementById("timeRemaining");
+      const elapsedTimeSpan = document.getElementById("elapsedTime"); // NUEVO: Elemento tiempo transcurrido
       const contestStatusDiv = document.getElementById("contestStatus");
       const submitButton = document.getElementById("submitButton");
+
+      let elapsedSeconds = 0; // Inicializar tiempo transcurrido
 
       if (now < contestStartTime) {
           const timeLeft = Math.floor((contestStartTime.getTime() - now.getTime()) / 1000);
           timeRemainingSpan.textContent = secondsToHMS(timeLeft);
+          elapsedTimeSpan.textContent = "00:00:00"; // Antes de iniciar, 0 transcurrido
           contestStatusDiv.textContent = "El concurso aún no ha comenzado.";
           submitButton.disabled = true;
           submitButton.classList.add("disabled");
       } else if (now >= contestStartTime && now <= endTime) {
           const timeLeft = Math.floor((endTime.getTime() - now.getTime()) / 1000);
+          elapsedSeconds = Math.floor((now.getTime() - contestStartTime.getTime()) / 1000); // Calcular tiempo transcurrido
           timeRemainingSpan.textContent = secondsToHMS(timeLeft);
+          elapsedTimeSpan.textContent = secondsToHMS(elapsedSeconds); // Mostrar tiempo transcurrido
           contestStatusDiv.textContent = "¡Concurso en curso!";
           submitButton.disabled = false;
           submitButton.classList.remove("disabled");
       } else { // now > endTime
           timeRemainingSpan.textContent = "00:00:00";
+          elapsedSeconds = Math.floor((endTime.getTime() - contestStartTime.getTime()) / 1000); // Tiempo total transcurrido
+          elapsedTimeSpan.textContent = secondsToHMS(elapsedSeconds); // Mostrar tiempo total
           contestStatusDiv.textContent = "El concurso ha terminado.";
           submitButton.disabled = true;
           submitButton.classList.add("disabled");
@@ -216,7 +247,7 @@
 
   document.getElementById("submitForm").onsubmit = e => {
     e.preventDefault();
-    // Ya no se necesita el nombre del input, se usa la variable global
+    // Se usa la variable global userName y el problema seleccionado del dropdown
     const pid = document.getElementById("problemSelect").value;
     const ans = document.getElementById("answerInput").value.trim();
     fetch("/submit", {
@@ -238,24 +269,26 @@
       let currentProblemHeaders = theadRow.querySelectorAll('.problem-header');
       currentProblemHeaders.forEach(header => header.remove());
 
-      // Añadir encabezados de problemas dinámicamente
-      for (const pid in currentProblems) {
+      // Obtener las IDs de los problemas y ordenarlas alfabéticamente para la tabla
+      const sortedPids = Object.keys(currentProblems).sort();
+
+      // Añadir encabezados de problemas dinámicamente en orden alfabético
+      sortedPids.forEach(pid => {
         const th = document.createElement("th");
         th.classList.add("problem-header"); // Para poder seleccionarlos y eliminarlos
         th.textContent = pid;
         theadRow.insertBefore(th, theadRow.children[1]); // Insertar después de "Participante"
-      }
-
+      });
 
       tbody.innerHTML = "";
       data.forEach(part => {
         const row = document.createElement("tr");
         let statusCells = '';
-        // Asegurarse de que el orden de los problemas en el ranking es el mismo que en currentProblems
-        for (const pid in currentProblems) {
+        // Llenar las celdas de estado de los problemas en el mismo orden alfabético
+        sortedPids.forEach(pid => {
             const status = part.status[pid] || ''; // Obtener el estado del problema, si no existe es vacío
             statusCells += `<td>${status}</td>`;
-        }
+        });
         row.innerHTML = `<td>${part.name}</td>${statusCells}<td>${part.score}</td><td>${part.penalty}</td>`;
         tbody.appendChild(row);
       });
@@ -271,7 +304,7 @@
       contestDurationSeconds = data.value;
     } else if (data.type === 'problems') {
       currentProblems = data.value;
-      updateProblemSelect(currentProblems);
+      updateProblemSelect(currentProblems); // Actualiza y muestra el primer problema
     }
     updateContestDisplay();
   });
@@ -287,8 +320,7 @@
   });
 
   // Check if user is already logged in (e.g., after a page refresh)
-  // This needs a server endpoint to check session status
-  fetch('/check_session') // You might need to add this endpoint in main.py
+  fetch('/check_session')
       .then(response => response.json())
       .then(data => {
           if (data.logged_in) {

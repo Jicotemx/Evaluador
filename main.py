@@ -303,7 +303,7 @@ def ejecutar_accion():
                 socketio.emit('config_update', {
                     'type': 'start_time',
                     'value': START_TIME.isoformat()
-                }, broadcast=True)
+                })
                 logging.info(f"Hora de inicio cambiada a: {START_TIME}")
             except ValueError as e:
                 mensajes.append(f"Error en formato de hora (esperado AAAA-MM-DD HH:MM): {str(e)}")
@@ -327,7 +327,7 @@ def ejecutar_accion():
                 socketio.emit('config_update', {
                     'type': 'duration',
                     'value': int(DURATION.total_seconds())
-                }, broadcast=True)
+                })
                 logging.info(f"Duración cambiada a: {DURATION}")
             except ValueError as e:
                 mensajes.append(f"Error con duración (debe ser un número entero): {str(e)}")
@@ -358,8 +358,8 @@ def ejecutar_accion():
             socketio.emit('config_update', {
                 'type': 'problems',
                 'value': {k: {'enunciado': v['enunciado'], 'respuesta': str(v['respuesta'])} for k, v in problems.items()}
-            }, broadcast=True)
-            socketio.emit('force_reload', {}, broadcast=True) # Forzar recarga para el frontend
+            })
+            socketio.emit('force_reload', {}) # Forzar recarga para el frontend
             
         except Exception as e:
             mensajes.append(f"Error recargando problemas: {str(e)}")
@@ -367,7 +367,7 @@ def ejecutar_accion():
     
     # Forzar recarga si hubo cambios
     if cambios_realizados and "recargar_problemas" not in acciones: # No duplicar si ya se hizo por problemas
-        socketio.emit('force_reload', {}, broadcast=True)
+        socketio.emit('force_reload', {})
     
     return jsonify({
         "mensaje": " | ".join(mensajes) if mensajes else "No se realizaron cambios",

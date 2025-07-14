@@ -23,7 +23,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 # CONFIGURACIÓN
 # =====================
 # Hora de inicio por defecto (se puede cambiar desde admin)
-anno, mes, dia, hora, minuto = 2025, 7, 14, 15, 46
+anno, mes, dia, hora, minuto = 2025, 7, 14, 16, 25
 LOCAL_TIMEZONE = pytz.timezone("America/Mexico_City")
 START_TIME = LOCAL_TIMEZONE.localize(datetime(year=anno, month=mes, day=dia, hour=hora, minute=minuto))
 DURATION = timedelta(minutes=2)
@@ -250,6 +250,7 @@ def login():
         return jsonify({"error": "Contraseña incorrecta."}), 401
 
     session['logged_in_user'] = name # Guardar el nombre del usuario en la sesión
+    logging.info(f"Participante '{name}' ha iniciado sesión.")
     return jsonify({"message": "Login exitoso"})
 
 # RUTA PARA CERRAR SESIÓN

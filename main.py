@@ -252,6 +252,13 @@ def login():
     session['logged_in_user'] = name # Guardar el nombre del usuario en la sesión
     return jsonify({"message": "Login exitoso"})
 
+# RUTA PARA CERRAR SESIÓN
+@app.route("/logout", methods=["POST"])
+def logout():
+    session.pop('logged_in_user', None) # Eliminar el usuario de la sesión
+    logging.info("Usuario ha cerrado sesión.")
+    return jsonify({"message": "Cierre de sesión exitoso."})
+
 @app.before_request
 def check_login():
     # Permitir acceso a la página de login y a los recursos estáticos sin estar logueado

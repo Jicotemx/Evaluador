@@ -5,9 +5,9 @@
   <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
 
   <meta charset="UTF-8">
-  <title>Evaluador num茅rico 馃М</title>
+  <title>Evaluador numérico 🧮</title>
   <style>
-    /* A帽adir cursor para mejor UX */
+    /* Añadir cursor para mejor UX */
     .disabled {
       opacity: 0.5;
       pointer-events: none;
@@ -40,7 +40,7 @@
 <div id="loginDiv">
   <h2>Acceso</h2>
   <input type="text" id="loginName" placeholder="Tu nombre" />
-  <input type="password" id="loginPassword" placeholder="Contrase帽a" />
+  <input type="password" id="loginPassword" placeholder="Contraseña" />
   <button onclick="login()">Entrar</button>
   <div id="loginMsg" aria-live="polite"></div> </div>
 
@@ -70,12 +70,12 @@
       <tr>
         <th>Participante</th>
         {% for pid in problems %}<th>{{ pid }}</th>{% endfor %}
-        <th>Puntos</th><th>Penalizaci贸n</th>
+        <th>Puntos</th><th>Penalización</th>
       </tr>
     </thead>
     <tbody></tbody>
   </table>
-  <p><a href="/admin">Ir a Panel de Administraci贸n</a></p>
+  <p><a href="/admin">Ir a Panel de Administración</a></p>
 </div>
 
 <script>
@@ -106,9 +106,9 @@ socket.on('force_reload', () => {
     location.reload();
 });
 
-// Manejar actualizaciones de configuraci贸n desde el servidor
+// Manejar actualizaciones de configuración desde el servidor
 socket.on('config_update', (data) => {
-    console.log("Configuraci贸n actualizada recibida:", data);
+    console.log("Configuración actualizada recibida:", data);
     if (data.type === 'start_time') {
         startTime = new Date(data.value);
         updateTimer(); // Actualiza el timer inmediatamente
@@ -124,7 +124,7 @@ socket.on('config_update', (data) => {
 // Manejar actualizaciones del ranking desde el servidor
 socket.on('ranking_update', (data) => {
     console.log("Ranking actualizado recibido via socket:", data);
-    updateRankingTable(data); // Llama a una funci贸n dedicada para actualizar la tabla
+    updateRankingTable(data); // Llama a una función dedicada para actualizar la tabla
 });
 
 
@@ -134,7 +134,7 @@ function login() {
   const loginMsgElem = document.getElementById("loginMsg"); // Referencia una vez
 
   if (!name || !password) {
-    loginMsgElem.textContent = "Falta nombre o contrase帽a.";
+    loginMsgElem.textContent = "Falta nombre o contraseña.";
     return;
   }
 
@@ -153,7 +153,7 @@ function login() {
     if (data.error) {
       loginMsgElem.textContent = data.error;
     } else {
-      loginMsgElem.textContent = "Login exitoso!"; // Mensaje de 茅xito
+      loginMsgElem.textContent = "Login exitoso!"; // Mensaje de éxito
       document.getElementById("loginDiv").style.display = "none";
       document.getElementById("mainDiv").style.display = "block";
       document.getElementById("submitName").value = name;
@@ -162,7 +162,7 @@ function login() {
   })
   .catch(error => {
     console.error("Error en el login:", error);
-    loginMsgElem.textContent = error.message || "Error al intentar iniciar sesi贸n.";
+    loginMsgElem.textContent = error.message || "Error al intentar iniciar sesión.";
   });
 }
 
@@ -174,7 +174,7 @@ function mostrarEnunciado() {
     let newEnunciadoContent = "";
 
     if (window.concursoStatus === "before") {
-        newEnunciadoContent = "<em>El concurso a煤n no ha comenzado.</em>";
+        newEnunciadoContent = "<em>El concurso aún no ha comenzado.</em>";
     } else if (!problemasData[pid]) {
         newEnunciadoContent = "<em>Problema no encontrado.</em>";
     } else {
@@ -193,7 +193,7 @@ function mostrarEnunciado() {
         currentEnunciadoHtml = newEnunciadoContent; // Guarda el contenido actual
         currentProblemId = pid; // Guarda el ID del problema actual
 
-        // Asegurar que MathJax se renderice despu茅s de que el DOM est茅 listo
+        // Asegurar que MathJax se renderice después de que el DOM esté listo
         // y solo si hay contenido MathJax potencial
         const mathContentContainer = document.getElementById("math-content");
         if (mathContentContainer && typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
@@ -203,14 +203,14 @@ function mostrarEnunciado() {
                 console.error("MathJax error:", err);
             });
         } else if (typeof MathJax === 'undefined') {
-            console.warn("MathJax no est谩 cargado o no tiene typesetPromise.");
+            console.warn("MathJax no está cargado o no tiene typesetPromise.");
         }
     }
 }
 
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Si el usuario ya est谩 logueado (por ejemplo, al recargar la p谩gina), muestra el mainDiv
+  // Si el usuario ya está logueado (por ejemplo, al recargar la página), muestra el mainDiv
   if ("{{ logged_in_user }}" !== "None") { // Chequea la variable de Jinja
       document.getElementById("loginDiv").style.display = "none";
       document.getElementById("mainDiv").style.display = "block";
@@ -222,7 +222,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function iniciarConcurso() {
-  updateTimer(); // Primera actualizaci贸n del temporizador
+  updateTimer(); // Primera actualización del temporizador
   loadRanking(); // Primera carga del ranking
   mostrarEnunciado(); // Asegurarse de que el enunciado se muestre al iniciar
 
@@ -232,7 +232,7 @@ function iniciarConcurso() {
   setInterval(loadRanking, 10000);
 }
 
-// Funci贸n mejorada para actualizar el temporizador
+// Función mejorada para actualizar el temporizador
 function updateTimer() {
     const now = new Date();
     const startTimeObj = new Date(startTime);
@@ -251,14 +251,14 @@ function updateTimer() {
         newConcursoStatus = "before";
         const diff = Math.floor((startTimeObj - now) / 1000);
         timerElem.textContent = `Comienza en: ${secondsToHMS(diff)}`;
-        statusMsg.textContent = "El concurso comenzar谩 pronto.";
+        statusMsg.textContent = "El concurso comenzará pronto.";
         answerInput.disabled = true;
         submitButton.disabled = true;
     } else if (now < endTime) {
         newConcursoStatus = "running";
         const elapsed = Math.floor((now - startTimeObj) / 1000);
         const remaining = durationSeconds - elapsed;
-        timerElem.textContent = `鈴憋笍 Transcurrido: ${secondsToHMS(elapsed)} | 鈱?Faltan: ${secondsToHMS(remaining)}`;
+        timerElem.textContent = `⏱️ Transcurrido: ${secondsToHMS(elapsed)} | ⌛ Faltan: ${secondsToHMS(remaining)}`;
         statusMsg.textContent = "Concurso en curso";
         answerInput.disabled = false;
         submitButton.disabled = false;
@@ -289,11 +289,11 @@ document.getElementById("submitForm").onsubmit = e => {
   const ans = document.getElementById("answerInput").value.trim();
   const submitMsgElem = document.getElementById("submitMsg");
 
-  // Validaci贸n b谩sica del lado del cliente para la respuesta
+  // Validación básica del lado del cliente para la respuesta
   // Puedes expandir esto si sabes si la respuesta debe ser num茅rica, string, etc.
   if (ans === "") {
-      submitMsgElem.textContent = "La respuesta no puede estar vac铆a.";
-      submitMsgElem.className = 'message error'; // A帽adir clase de error
+      submitMsgElem.textContent = "La respuesta no puede estar vacía.";
+      submitMsgElem.className = 'message error'; // Añadir clase de error
       return;
   }
 
@@ -310,8 +310,8 @@ document.getElementById("submitForm").onsubmit = e => {
   })
   .then(data => {
     submitMsgElem.textContent = data.message || data.error || "";
-    submitMsgElem.className = data.error ? 'message error' : 'message success'; // A帽adir clase de 茅xito/error
-    // Limpiar el campo de respuesta despu茅s de enviar
+    submitMsgElem.className = data.error ? 'message error' : 'message success'; // Añadir clase de éxito/error
+    // Limpiar el campo de respuesta después de enviar
     document.getElementById("answerInput").value = '';   
   })
   .catch(error => {
@@ -330,15 +330,15 @@ function loadRanking() {
     return response.json();
   })
   .then(data => {
-    updateRankingTable(data); // Usar la nueva funci贸n para actualizar la tabla
+    updateRankingTable(data); // Usar la nueva función para actualizar la tabla
   })
   .catch(error => {
     console.error("Error al cargar el ranking:", error);
-    // Podr铆as mostrar un mensaje en el ranking table o en la consola
+    // Podrías mostrar un mensaje en el ranking table o en la consola
   });
 }
 
-// Nueva funci贸n para actualizar la tabla de ranking (llamada por fetch y socket)
+// Nueva función para actualizar la tabla de ranking (llamada por fetch y socket)
 function updateRankingTable(data) {
     const tbody = document.querySelector("#rankingTable tbody");
     tbody.innerHTML = "";
@@ -364,9 +364,9 @@ v<!DOCTYPE html>
   <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
 
   <meta charset="UTF-8">
-  <title>Evaluador num茅rico 馃М</title>
+  <title>Evaluador numérico 🧮</title>
   <style>
-    /* A帽adir cursor para mejor UX */
+    /* Añadir cursor para mejor UX */
     .disabled {
       opacity: 0.5;
       pointer-events: none;
@@ -399,7 +399,7 @@ v<!DOCTYPE html>
 <div id="loginDiv">
   <h2>Acceso</h2>
   <input type="text" id="loginName" placeholder="Tu nombre" />
-  <input type="password" id="loginPassword" placeholder="Contrase帽a" />
+  <input type="password" id="loginPassword" placeholder="Contraseña" />
   <button onclick="login()">Entrar</button>
   <div id="loginMsg" aria-live="polite"></div> </div>
 
@@ -452,7 +452,7 @@ let startTime = new Date("{{ start_time_iso }}");
 let durationSeconds = {{ duration }}; // 'let' para permitir cambios desde el socket
 let concursoStatus = "{{ status }}"; // Estado inicial del concurso
 
-// Variables para controlar la renderizaci贸n de MathJax y el enunciado
+// Variables para controlar la renderización de MathJax y el enunciado
 let currentProblemId = null;
 let currentEnunciadoHtml = null; // Para evitar re-renderizado innecesario de MathJax
 
@@ -465,7 +465,7 @@ socket.on('force_reload', () => {
     location.reload();
 });
 
-// Manejar actualizaciones de configuraci贸n desde el servidor
+// Manejar actualizaciones de configuración desde el servidor
 socket.on('config_update', (data) => {
     console.log("Configuraci贸n actualizada recibida:", data);
     if (data.type === 'start_time') {
@@ -475,8 +475,8 @@ socket.on('config_update', (data) => {
         durationSeconds = data.value;
         updateTimer(); // Actualiza el timer inmediatamente
     } else if (data.type === 'problems') {
-        // Para cambios de problemas, lo m谩s simple es recargar la p谩gina.
-        // Una actualizaci贸n din谩mica ser铆a mucho m谩s compleja.
+        // Para cambios de problemas, lo más simple es recargar la p谩gina.
+        // Una actualización dinámica sería mucho más compleja.
         location.reload();
     }
 });
@@ -494,7 +494,7 @@ function login() {
   const loginMsgElem = document.getElementById("loginMsg"); // Referencia una vez
 
   if (!name || !password) {
-    loginMsgElem.textContent = "Falta nombre o contrase帽a.";
+    loginMsgElem.textContent = "Falta nombre o contraseña.";
     return;
   }
 
@@ -513,7 +513,7 @@ function login() {
     if (data.error) {
       loginMsgElem.textContent = data.error;
     } else {
-      loginMsgElem.textContent = "Login exitoso!"; // Mensaje de 茅xito
+      loginMsgElem.textContent = "Login exitoso!"; // Mensaje de éxito
       document.getElementById("loginDiv").style.display = "none";
       document.getElementById("mainDiv").style.display = "block";
       document.getElementById("submitName").value = name;
@@ -522,11 +522,11 @@ function login() {
   })
   .catch(error => {
     console.error("Error en el login:", error);
-    loginMsgElem.textContent = error.message || "Error al intentar iniciar sesi贸n.";
+    loginMsgElem.textContent = error.message || "Error al intentar iniciar sesión.";
   });
 }
 
-// Funci贸n modificada para mostrar el enunciado y renderizar MathJax
+// Función modificada para mostrar el enunciado y renderizar MathJax
 function mostrarEnunciado() {
     const pid = document.getElementById("problemSelect").value;
     const enunciadoDiv = document.getElementById("enunciado");
@@ -534,7 +534,7 @@ function mostrarEnunciado() {
     let newEnunciadoContent = "";
 
     if (window.concursoStatus === "before") {
-        newEnunciadoContent = "<em>El concurso a煤n no ha comenzado.</em>";
+        newEnunciadoContent = "<em>El concurso aún no ha comenzado.</em>";
     } else if (!problemasData[pid]) {
         newEnunciadoContent = "<em>Problema no encontrado.</em>";
     } else {
@@ -553,7 +553,7 @@ function mostrarEnunciado() {
         currentEnunciadoHtml = newEnunciadoContent; // Guarda el contenido actual
         currentProblemId = pid; // Guarda el ID del problema actual
 
-        // Asegurar que MathJax se renderice despu茅s de que el DOM est茅 listo
+        // Asegurar que MathJax se renderice después de que el DOM esté listo
         // y solo si hay contenido MathJax potencial
         const mathContentContainer = document.getElementById("math-content");
         if (mathContentContainer && typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
@@ -563,14 +563,14 @@ function mostrarEnunciado() {
                 console.error("MathJax error:", err);
             });
         } else if (typeof MathJax === 'undefined') {
-            console.warn("MathJax no est谩 cargado o no tiene typesetPromise.");
+            console.warn("MathJax no está cargado o no tiene typesetPromise.");
         }
     }
 }
 
 
 document.addEventListener("DOMContentLoaded", () => {
-  // Si el usuario ya est谩 logueado (por ejemplo, al recargar la p谩gina), muestra el mainDiv
+  // Si el usuario ya está logueado (por ejemplo, al recargar la página), muestra el mainDiv
   if ("{{ logged_in_user }}" !== "None") { // Chequea la variable de Jinja
       document.getElementById("loginDiv").style.display = "none";
       document.getElementById("mainDiv").style.display = "block";
@@ -592,7 +592,7 @@ function iniciarConcurso() {
   setInterval(loadRanking, 10000);
 }
 
-// Funci贸n mejorada para actualizar el temporizador
+// Función mejorada para actualizar el temporizador
 function updateTimer() {
     const now = new Date();
     const startTimeObj = new Date(startTime);
@@ -611,14 +611,14 @@ function updateTimer() {
         newConcursoStatus = "before";
         const diff = Math.floor((startTimeObj - now) / 1000);
         timerElem.textContent = `Comienza en: ${secondsToHMS(diff)}`;
-        statusMsg.textContent = "El concurso comenzar谩 pronto.";
+        statusMsg.textContent = "El concurso comenzará pronto.";
         answerInput.disabled = true;
         submitButton.disabled = true;
     } else if (now < endTime) {
         newConcursoStatus = "running";
         const elapsed = Math.floor((now - startTimeObj) / 1000);
         const remaining = durationSeconds - elapsed;
-        timerElem.textContent = `鈴憋笍 Transcurrido: ${secondsToHMS(elapsed)} | 鈱?Faltan: ${secondsToHMS(remaining)}`;
+        timerElem.textContent = `⏱️ Transcurrido: ${secondsToHMS(elapsed)} | ⌛ Faltan: ${secondsToHMS(remaining)}`;
         statusMsg.textContent = "Concurso en curso";
         answerInput.disabled = false;
         submitButton.disabled = false;
@@ -649,11 +649,11 @@ document.getElementById("submitForm").onsubmit = e => {
   const ans = document.getElementById("answerInput").value.trim();
   const submitMsgElem = document.getElementById("submitMsg");
 
-  // Validaci贸n b谩sica del lado del cliente para la respuesta
+  // Validación básica del lado del cliente para la respuesta
   // Puedes expandir esto si sabes si la respuesta debe ser num茅rica, string, etc.
   if (ans === "") {
-      submitMsgElem.textContent = "La respuesta no puede estar vac铆a.";
-      submitMsgElem.className = 'message error'; // A帽adir clase de error
+      submitMsgElem.textContent = "La respuesta no puede estar vacía.";
+      submitMsgElem.className = 'message error'; // Añadir clase de error
       return;
   }
 
@@ -670,10 +670,10 @@ document.getElementById("submitForm").onsubmit = e => {
   })
   .then(data => {
     submitMsgElem.textContent = data.message || data.error || "";
-    submitMsgElem.className = data.error ? 'message error' : 'message success'; // A帽adir clase de 茅xito/error
-    // Limpiar el campo de respuesta despu茅s de enviar
+    submitMsgElem.className = data.error ? 'message error' : 'message success'; // Añadir clase de éxito/error
+    // Limpiar el campo de respuesta después de enviar
     document.getElementById("answerInput").value = '';
-    // El ranking se actualizar谩 v铆a socketio.on('ranking_update')
+    // El ranking se actualizará vía socketio.on('ranking_update')
   })
   .catch(error => {
     console.error("Error al enviar respuesta:", error);
@@ -695,11 +695,11 @@ function loadRanking() {
   })
   .catch(error => {
     console.error("Error al cargar el ranking:", error);
-    // Podr铆as mostrar un mensaje en el ranking table o en la consola
+    // Podrías mostrar un mensaje en el ranking table o en la consola
   });
 }
 
-// Nueva funci贸n para actualizar la tabla de ranking (llamada por fetch y socket)
+// Nueva función para actualizar la tabla de ranking (llamada por fetch y socket)
 function updateRankingTable(data) {
     const tbody = document.querySelector("#rankingTable tbody");
     tbody.innerHTML = "";

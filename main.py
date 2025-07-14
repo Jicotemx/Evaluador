@@ -224,6 +224,12 @@ def reevaluar_todos():
 # FLASK ENDPOINTS
 # =====================
 
+@app.route("/logout", methods=["POST"])
+def logout():
+    session.pop('logged_in_user', None) # Eliminar el usuario de la sesión
+    logging.info("Usuario ha cerrado sesión.")
+    return jsonify({"message": "Cierre de sesión exitoso."})
+
 @app.route("/login", methods=["POST"])
 def login():
     name = request.form["name"].strip()

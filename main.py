@@ -268,6 +268,14 @@ def check_login():
         # Como index.html maneja el login/mainDiv, no necesitamos una redirección de Flask aquí.
         pass # El frontend JS se encarga de mostrar el loginDiv
 
+@app.route("/admin")
+def admin_panel():
+    """Ruta para servir el panel de administración."""
+    # En un entorno real, esta página también debería requerir autenticación de admin
+    # antes de ser servida, no solo para las acciones POST.
+    return render_template("admin.html")
+
+
 @app.route("/admin/ejecutar_accion", methods=["POST"])
 def ejecutar_accion():
     global START_TIME, DURATION, problems, informe_subido

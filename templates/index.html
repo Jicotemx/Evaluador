@@ -161,7 +161,7 @@ function login() {
       loginMsgElem.textContent = "Login exitoso!"; // Mensaje de éxito
       document.getElementById("loginDiv").style.display = "none";
       document.getElementById("mainDiv").style.display = "block";
-      document.getElementById("submitName").value = name;
+      document-getElementById("submitName").value = name;
       iniciarConcurso();
     }
   })
@@ -171,6 +171,35 @@ function login() {
   });
 }
 
+// Manejador del botón de Salir
+  document.getElementById("logoutButton").addEventListener("click", () => {
+      fetch("/logout", {
+          method: "POST"
+      })
+      .then(response => response.json())
+      .then(data => {
+          if (data.message) {
+              // Si el cierre de sesión fue exitoso, ocultar contenido principal y mostrar login
+              document.getElementById("mainContent").style.display = "none";
+              document.getElementById("loginDiv").style.display = "block";
+              document.getElementById("loginName").value = ""; // Limpiar campos de login
+              document.getElementById("loginPassword").value = "";
+              document.getElementById("loginMessage").textContent = data.message;
+              userName = ''; // Limpiar el nombre de usuario almacenado
+          } else {
+              console.error("Error al cerrar sesión:", data.error);
+              document.getElementById("loginMessage").textContent = data.error || "Error al cerrar sesión.";
+          }
+      })
+      .catch(error => {
+          console.error("Error de conexión al cerrar sesión:", error);
+          document.getElementById("loginMessage").textContent = "Error de conexión al cerrar sesión.";
+      });
+  });
+
+
+
+  
 // Función modificada para mostrar el enunciado y renderizar MathJax
 function mostrarEnunciado() {
     const pid = document.getElementById("problemSelect").value;
@@ -259,6 +288,8 @@ function updateTimer() {
         statusMsg.textContent = "El concurso comenzará pronto.";
         answerInput.disabled = true;
         submitButton.disabled = true;
+        <button id="logoutButton">Salir</button> 
+
     } else if (now < endTime) {
         newConcursoStatus = "running";
         const elapsed = Math.floor((now - startTimeObj) / 1000);
@@ -267,12 +298,15 @@ function updateTimer() {
         statusMsg.textContent = "Concurso en curso";
         answerInput.disabled = false;
         submitButton.disabled = false;
+        <button id="logoutButton">Salir</button> 
+
     } else {
         newConcursoStatus = "after";
         timerElem.textContent = "Concurso finalizado.";
         statusMsg.textContent = "Concurso finalizado.";
         answerInput.disabled = true;
         submitButton.disabled = true;
+        <button id="logoutButton">Salir</button> 
     }
 
     // Solo actualiza el estado si ha cambiado

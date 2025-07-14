@@ -49,6 +49,7 @@
 
 
 <div id="mainDiv" style="display:none">
+  <button id="logoutButton" style="margin: 10px 0;">Salir</button>
   <div id="statusMsg" aria-live="polite" style="font-weight: bold;"></div> <div id="timer" style="font-weight:bold"></div>
 
   <form id="submitForm">
@@ -161,7 +162,7 @@ function login() {
       loginMsgElem.textContent = "Login exitoso!"; // Mensaje de éxito
       document.getElementById("loginDiv").style.display = "none";
       document.getElementById("mainDiv").style.display = "block";
-      document-getElementById("submitName").value = name;
+      document.getElementById("submitName").value = name;
       iniciarConcurso();
     }
   })
@@ -288,7 +289,7 @@ function updateTimer() {
         statusMsg.textContent = "El concurso comenzará pronto.";
         answerInput.disabled = true;
         submitButton.disabled = true;
-        <button id="logoutButton">Salir</button> 
+        
 
     } else if (now < endTime) {
         newConcursoStatus = "running";

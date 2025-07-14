@@ -6,7 +6,12 @@
   <meta charset="UTF-8">
   <title>Evaluador numérico 🧮</title>
   <style>
-    .disabled { opacity: 0.5; pointer-events: none; }
+    /* Añadir cursor para mejor UX */
+    .disabled {
+      opacity: 0.5;
+      pointer-events: none;
+      cursor: not-allowed; /* Nueva regla */
+    }
     table, th, td { border: 1px solid black; border-collapse: collapse; padding: 4px; }
   </style>
   <script>
@@ -32,316 +37,325 @@
 <body>
 
 <div id="loginDiv">
-  <h2>Acceso Participante</h2> <input type="text" id="loginName" placeholder="Tu nombre" />
+  <h2>Acceso</h2>
+  <input type="text" id="loginName" placeholder="Tu nombre" />
   <input type="password" id="loginPassword" placeholder="Contraseña" />
   <button onclick="login()">Entrar</button>
-  <p id="loginMessage" style="color: red;"></p>
-  <hr>
-  <p>¿Eres administrador? <a href="/admin">Acceder al Panel de Administración</a></p> </div>
+  <div id="loginMsg" aria-live="polite"></div> </div>
 
-<div id="mainContent" style="display: none;">
-  <h2>¡Bienvenido, <span id="userNameDisplay"></span>!</h2>
-  <button id="logoutButton">Salir</button> 
+<div id="mainDiv" style="display:none">
+  <div id="statusMsg" aria-live="polite" style="font-weight: bold;"></div> <div id="timer" style="font-weight:bold"></div>
 
-  <p>Tiempo restante: <span id="timeRemaining"></span></p>
-  <p>Tiempo transcurrido: <span id="elapsedTime"></span></p> <p id="contestStatus"></p>
-
-  <h3>Problemas</h3>
-  <form id="problemDisplayForm"> <label for="problemSelect">Seleccionar Problema:</label>
-    <select id="problemSelect"></select><br>
-  </form>
-  <div id="problemEnunciado">
-    </div>
-
-  <h3>Enviar Respuesta</h3>
   <form id="submitForm">
-    <label for="answerInput">Tu Respuesta:</label>
-    <input type="text" id="answerInput" placeholder="Ej: 3.14159 o tu respuesta exacta" /><br>
-    <button type="submit" id="submitButton">Enviar</button>
-    <p id="submitMsg"></p>
-  </form>
+    <h2>Enviar respuesta</h2>
+    <label for="submitName">Nombre:</label>
+    <input type="text" id="submitName" readonly /><br/>
 
-  <h3>Clasificación</h3>
+    <label for="problemSelect">Problema:</label>
+    <select id="problemSelect" required onchange="mostrarEnunciado()">
+      {% for pid in problems %}<option value="{{ pid }}">{{ pid }}</option>{% endfor %}
+    </select><br/>
+
+    <div id="enunciado" style="margin:1em 0; font-size:18px;"></div>
+
+    <label for="answerInput">Respuesta:</label>
+    <input type="text" id="answerInput" required /><br/>
+    <button type="submit">Enviar</button>
+    <div id="submitMsg" aria-live="polite"></div> </form>
+
+  <h3>Tabla de posiciones</h3>
   <table id="rankingTable">
     <thead>
       <tr>
         <th>Participante</th>
-        <th>Puntos</th>
-        <th>Penalización</th>
+        {% for pid in problems %}<th>{{ pid }}</th>{% endfor %}
+        <th>Puntos</th><th>Penalización</th>
       </tr>
     </thead>
-    <tbody>
-      </tbody>
+    <tbody></tbody>
   </table>
+  <p><a href="/admin">Ir a Panel de Administración</a></p>
 </div>
 
 <script>
-  const socket = io();
-  let contestStartTime;
-  let contestDurationSeconds;
-  let currentProblems = {};
-  let userName = ''; // Variable para almacenar el nombre del usuario logeado
+// Datos de problemas inyectados desde Flask
+const problemasData = {
+  {% for pid, data in problems.items() %}
+    "{{ pid }}": {
+      "enunciado": {{ data.enunciado | tojson }},
+      "respuesta": {{ data.respuesta | tojson }}
+    },
+  {% endfor %}
+};
 
-  // Función de login
-  function login() {
-      const name = document.getElementById("loginName").value.trim();
-      const password = document.getElementById("loginPassword").value.trim();
+let startTime = new Date("{{ start_time_iso }}");
+let durationSeconds = {{ duration }}; // 'let' para permitir cambios desde el socket
+let concursoStatus = "{{ status }}"; // Estado inicial del concurso
 
-      fetch("/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: `name=${encodeURIComponent(name)}&password=${encodeURIComponent(password)}`
-      })
-      .then(response => response.json())
-      .then(data => {
-          if (data.message) {
-              document.getElementById("loginMessage").textContent = data.message;
-              document.getElementById("loginDiv").style.display = "none";
-              document.getElementById("mainContent").style.display = "block";
-              userName = name; // Guardar el nombre de usuario
-              document.getElementById("userNameDisplay").textContent = userName; // Mostrar en la UI
-              // Cargar estado inicial y ranking después del login
-              fetchContestConfig(); 
-              loadRanking();
-          } else {
-              document.getElementById("loginMessage").textContent = data.error;
-          }
-      })
-      .catch(error => {
-          console.error("Error durante el login:", error);
-          document.getElementById("loginMessage").textContent = "Error de conexión al intentar iniciar sesión.";
-      });
-  }
+// Variables para controlar la renderización de MathJax y el enunciado
+let currentProblemId = null;
+let currentEnunciadoHtml = null; // Para evitar re-renderizado innecesario de MathJax
 
-  // Manejador del botón de Salir
-  document.getElementById("logoutButton").addEventListener("click", () => {
-      fetch("/logout", {
-          method: "POST"
-      })
-      .then(response => response.json())
-      .then(data => {
-          if (data.message) {
-              // Si el cierre de sesión fue exitoso, ocultar contenido principal y mostrar login
-              document.getElementById("mainContent").style.display = "none";
-              document.getElementById("loginDiv").style.display = "block";
-              document.getElementById("loginName").value = ""; // Limpiar campos de login
-              document.getElementById("loginPassword").value = "";
-              document.getElementById("loginMessage").textContent = data.message;
-              userName = ''; // Limpiar el nombre de usuario almacenado
-          } else {
-              console.error("Error al cerrar sesión:", data.error);
-              document.getElementById("loginMessage").textContent = data.error || "Error al cerrar sesión.";
-          }
-      })
-      .catch(error => {
-          console.error("Error de conexión al cerrar sesión:", error);
-          document.getElementById("loginMessage").textContent = "Error de conexión al cerrar sesión.";
-      });
-  });
+// Inicializar Socket.IO
+const socket = io();
 
-  // Fetch initial contest configuration
-  function fetchContestConfig() {
-    fetch('/contest_config')
-      .then(response => response.json())
-      .then(data => {
-        contestStartTime = new Date(data.start_time);
-        contestDurationSeconds = data.duration;
-        currentProblems = data.problems;
-        updateProblemSelect(currentProblems); // Actualiza el select y muestra el primer problema
-        updateContestDisplay();
-      })
-      .catch(error => console.error('Error fetching contest config:', error));
-  }
+// Manejar recarga forzada
+socket.on('force_reload', () => {
+    console.log("Recarga forzada solicitada por el servidor");
+    location.reload();
+});
 
-  // NUEVO: Función para mostrar solo un problema seleccionado
-  function displayProblem(pid) {
-    const problemEnunciadoDiv = document.getElementById("problemEnunciado");
-    problemEnunciadoDiv.innerHTML = ""; // Limpiar contenido anterior
-
-    if (pid && currentProblems[pid]) {
-        const p = document.createElement("p");
-        p.innerHTML = `<strong>Problema ${pid}:</strong> ${currentProblems[pid].enunciado}`;
-        problemEnunciadoDiv.appendChild(p);
-    } else {
-        problemEnunciadoDiv.textContent = "Selecciona un problema para ver su enunciado.";
-    }
-
-    // Renderizar MathJax de nuevo si está disponible para el nuevo contenido
-    if (typeof MathJax !== 'undefined') {
-      MathJax.typesetPromise().then(() => {
-        // console.log('MathJax rendering complete for single problem.');
-      });
-    }
-  }
-
-  // Actualiza el select de problemas y establece el evento change
-  function updateProblemSelect(problems) {
-    const select = document.getElementById("problemSelect");
-    select.innerHTML = "";
-    
-    // Obtener las IDs de los problemas y ordenarlas alfabéticamente
-    const sortedPids = Object.keys(problems).sort();
-
-    sortedPids.forEach(pid => {
-      const option = document.createElement("option");
-      option.value = pid;
-      option.textContent = `Problema ${pid}`;
-      select.appendChild(option);
-    });
-
-    // Añadir el evento listener para cambiar el problema mostrado
-    select.addEventListener("change", () => {
-        displayProblem(select.value);
-    });
-
-    // Mostrar el primer problema por defecto si hay alguno
-    if (sortedPids.length > 0) {
-        select.value = sortedPids[0]; // Establecer el primer problema como seleccionado
-        displayProblem(sortedPids[0]); // Mostrar su enunciado
-    } else {
-        displayProblem(null); // No hay problemas para mostrar
-    }
-  }
-
-  function updateContestDisplay() {
-      const now = new Date();
-      const endTime = new Date(contestStartTime.getTime() + contestDurationSeconds * 1000);
-      const timeRemainingSpan = document.getElementById("timeRemaining");
-      const elapsedTimeSpan = document.getElementById("elapsedTime"); // NUEVO: Elemento tiempo transcurrido
-      const contestStatusDiv = document.getElementById("contestStatus");
-      const submitButton = document.getElementById("submitButton");
-
-      let elapsedSeconds = 0; // Inicializar tiempo transcurrido
-
-      if (now < contestStartTime) {
-          const timeLeft = Math.floor((contestStartTime.getTime() - now.getTime()) / 1000);
-          timeRemainingSpan.textContent = secondsToHMS(timeLeft);
-          elapsedTimeSpan.textContent = "00:00:00"; // Antes de iniciar, 0 transcurrido
-          contestStatusDiv.textContent = "El concurso aún no ha comenzado.";
-          submitButton.disabled = true;
-          submitButton.classList.add("disabled");
-      } else if (now >= contestStartTime && now <= endTime) {
-          const timeLeft = Math.floor((endTime.getTime() - now.getTime()) / 1000);
-          elapsedSeconds = Math.floor((now.getTime() - contestStartTime.getTime()) / 1000); // Calcular tiempo transcurrido
-          timeRemainingSpan.textContent = secondsToHMS(timeLeft);
-          elapsedTimeSpan.textContent = secondsToHMS(elapsedSeconds); // Mostrar tiempo transcurrido
-          contestStatusDiv.textContent = "¡Concurso en curso!";
-          submitButton.disabled = false;
-          submitButton.classList.remove("disabled");
-      } else { // now > endTime
-          timeRemainingSpan.textContent = "00:00:00";
-          elapsedSeconds = Math.floor((endTime.getTime() - contestStartTime.getTime()) / 1000); // Tiempo total transcurrido
-          elapsedTimeSpan.textContent = secondsToHMS(elapsedSeconds); // Mostrar tiempo total
-          contestStatusDiv.textContent = "El concurso ha terminado.";
-          submitButton.disabled = true;
-          submitButton.classList.add("disabled");
-      }
-  }
-
-  // Actualizar cada segundo
-  setInterval(updateContestDisplay, 1000);
-
-  function secondsToHMS(s) {
-    const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
-    return `${h.toString().padStart(2,"0")}:${m.toString().padStart(2,"0")}:${sec.toString().padStart(2,"0")}`;}
-
-  document.getElementById("submitForm").onsubmit = e => {
-    e.preventDefault();
-    // Se usa la variable global userName y el problema seleccionado del dropdown
-    const pid = document.getElementById("problemSelect").value;
-    const ans = document.getElementById("answerInput").value.trim();
-    fetch("/submit", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: `name=${encodeURIComponent(userName)}&problem=${encodeURIComponent(pid)}&answer=${encodeURIComponent(ans)}`
-    }).then(r => r.json()).then(data => {
-      document.getElementById("submitMsg").textContent = data.message || data.error || "";
-      loadRanking();
-    });
-  };
-
-  function loadRanking() {
-    fetch("/ranking").then(r => r.json()).then(data => {
-      const tbody = document.querySelector("#rankingTable tbody");
-      const theadRow = document.querySelector("#rankingTable thead tr");
-      
-      // Limpiar encabezado de problemas anterior (excepto las primeras y últimas columnas)
-      let currentProblemHeaders = theadRow.querySelectorAll('.problem-header');
-      currentProblemHeaders.forEach(header => header.remove());
-
-      // Obtener las IDs de los problemas y ordenarlas alfabéticamente para la tabla
-      const sortedPids = Object.keys(currentProblems).sort();
-
-      // Añadir encabezados de problemas dinámicamente en orden alfabético
-      sortedPids.forEach(pid => {
-        const th = document.createElement("th");
-        th.classList.add("problem-header"); // Para poder seleccionarlos y eliminarlos
-        th.textContent = pid;
-        theadRow.insertBefore(th, theadRow.children[1]); // Insertar después de "Participante"
-      });
-
-      tbody.innerHTML = "";
-      data.forEach(part => {
-        const row = document.createElement("tr");
-        let statusCells = '';
-        // Llenar las celdas de estado de los problemas en el mismo orden alfabético
-        sortedPids.forEach(pid => {
-            const status = part.status[pid] || ''; // Obtener el estado del problema, si no existe es vacío
-            statusCells += `<td>${status}</td>`;
-        });
-        row.innerHTML = `<td>${part.name}</td>${statusCells}<td>${part.score}</td><td>${part.penalty}</td>`;
-        tbody.appendChild(row);
-      });
-    });
-  }
-
-  // Websocket updates
-  socket.on('config_update', function(data) {
-    console.log('Config update received:', data);
+// Manejar actualizaciones de configuración desde el servidor
+socket.on('config_update', (data) => {
+    console.log("Configuración actualizada recibida:", data);
     if (data.type === 'start_time') {
-      contestStartTime = new Date(data.value);
+        startTime = new Date(data.value);
+        updateTimer(); // Actualiza el timer inmediatamente
     } else if (data.type === 'duration') {
-      contestDurationSeconds = data.value;
+        durationSeconds = data.value;
+        updateTimer(); // Actualiza el timer inmediatamente
     } else if (data.type === 'problems') {
-      currentProblems = data.value;
-      updateProblemSelect(currentProblems); // Actualiza y muestra el primer problema
+        // Para cambios de problemas, lo más simple es recargar la página.
+        // Una actualización dinámica sería mucho más compleja.
+        location.reload();
     }
-    updateContestDisplay();
+});
+
+// Manejar actualizaciones del ranking desde el servidor
+socket.on('ranking_update', (data) => {
+    console.log("Ranking actualizado recibido via socket:", data);
+    updateRankingTable(data); // Llama a una función dedicada para actualizar la tabla
+});
+
+
+function login() {
+  const name = document.getElementById("loginName").value.trim();
+  const password = document.getElementById("loginPassword").value.trim();
+  const loginMsgElem = document.getElementById("loginMsg"); // Referencia una vez
+
+  if (!name || !password) {
+    loginMsgElem.textContent = "Falta nombre o contraseña.";
+    return;
+  }
+
+  fetch("/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `name=${encodeURIComponent(name)}&password=${encodeURIComponent(password)}`
+  })
+  .then(response => {
+    if (!response.ok) { // Manejar errores HTTP
+        return response.json().then(err => Promise.reject(err));
+    }
+    return response.json();
+  })
+  .then(data => {
+    if (data.error) {
+      loginMsgElem.textContent = data.error;
+    } else {
+      loginMsgElem.textContent = "Login exitoso!"; // Mensaje de éxito
+      document.getElementById("loginDiv").style.display = "none";
+      document.getElementById("mainDiv").style.display = "block";
+      document.getElementById("submitName").value = name;
+      iniciarConcurso();
+    }
+  })
+  .catch(error => {
+    console.error("Error en el login:", error);
+    loginMsgElem.textContent = error.message || "Error al intentar iniciar sesión.";
   });
+}
 
-  socket.on('ranking_update', function(data) {
-    console.log('Ranking update received.');
-    loadRanking();
+// Función modificada para mostrar el enunciado y renderizar MathJax
+function mostrarEnunciado() {
+    const pid = document.getElementById("problemSelect").value;
+    const enunciadoDiv = document.getElementById("enunciado");
+
+    let newEnunciadoContent = "";
+
+    if (window.concursoStatus === "before") {
+        newEnunciadoContent = "<em>El concurso aún no ha comenzado.</em>";
+    } else if (!problemasData[pid]) {
+        newEnunciadoContent = "<em>Problema no encontrado.</em>";
+    } else {
+        newEnunciadoContent = `
+            <div class="enunciado-container">
+                <strong>Enunciado:</strong>
+                <div id="math-content">${problemasData[pid].enunciado}</div>
+            </div>
+        `;
+    }
+
+    // Solo actualiza el DOM y MathJax si el contenido del enunciado ha cambiado
+    // o si el problema seleccionado ha cambiado (esto es importante para el dropdown)
+    if (newEnunciadoContent !== currentEnunciadoHtml || pid !== currentProblemId) {
+        enunciadoDiv.innerHTML = newEnunciadoContent;
+        currentEnunciadoHtml = newEnunciadoContent; // Guarda el contenido actual
+        currentProblemId = pid; // Guarda el ID del problema actual
+
+        // Asegurar que MathJax se renderice después de que el DOM esté listo
+        // y solo si hay contenido MathJax potencial
+        const mathContentContainer = document.getElementById("math-content");
+        if (mathContentContainer && typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+            // Usa typesetClear para limpiar y luego typesetPromise para renderizar el nuevo contenido
+            MathJax.typesetClear([mathContentContainer]); // Limpia el contenido anterior de MathJax
+            MathJax.typesetPromise([mathContentContainer]).catch(err => {
+                console.error("MathJax error:", err);
+            });
+        } else if (typeof MathJax === 'undefined') {
+            console.warn("MathJax no está cargado o no tiene typesetPromise.");
+        }
+    }
+}
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Si el usuario ya está logueado (por ejemplo, al recargar la página), muestra el mainDiv
+  if ("{{ logged_in_user }}" !== "None") { // Chequea la variable de Jinja
+      document.getElementById("loginDiv").style.display = "none";
+      document.getElementById("mainDiv").style.display = "block";
+      document.getElementById("submitName").value = "{{ logged_in_user }}";
+      iniciarConcurso();
+  } else {
+      mostrarEnunciado(); // Mostrar enunciado inicial (puede ser "antes del concurso")
+  }
+});
+
+function iniciarConcurso() {
+  updateTimer(); // Primera actualización del temporizador
+  loadRanking(); // Primera carga del ranking
+  mostrarEnunciado(); // Asegurarse de que el enunciado se muestre al iniciar
+
+  // Intervalo para actualizar el temporizador cada segundo
+  setInterval(updateTimer, 1000);
+  // Intervalo para cargar el ranking cada 10 segundos
+  setInterval(loadRanking, 10000);
+}
+
+// Función mejorada para actualizar el temporizador
+function updateTimer() {
+    const now = new Date();
+    const startTimeObj = new Date(startTime);
+    const endTime = new Date(startTimeObj.getTime() + durationSeconds * 1000);
+
+    const timerElem = document.getElementById("timer");
+    const form = document.getElementById("submitForm");
+    const answerInput = document.getElementById("answerInput");
+    const submitButton = form ? form.querySelector("button[type=submit]") : null;
+    const statusMsg = document.getElementById("statusMsg");
+
+    if (!timerElem || !form || !answerInput || !submitButton || !statusMsg) return;
+
+    let newConcursoStatus;
+    if (now < startTimeObj) {
+        newConcursoStatus = "before";
+        const diff = Math.floor((startTimeObj - now) / 1000);
+        timerElem.textContent = `Comienza en: ${secondsToHMS(diff)}`;
+        statusMsg.textContent = "El concurso comenzará pronto.";
+        answerInput.disabled = true;
+        submitButton.disabled = true;
+    } else if (now < endTime) {
+        newConcursoStatus = "running";
+        const elapsed = Math.floor((now - startTimeObj) / 1000);
+        const remaining = durationSeconds - elapsed;
+        timerElem.textContent = `⏱️ Transcurrido: ${secondsToHMS(elapsed)} | ⌛ Faltan: ${secondsToHMS(remaining)}`;
+        statusMsg.textContent = "Concurso en curso";
+        answerInput.disabled = false;
+        submitButton.disabled = false;
+    } else {
+        newConcursoStatus = "after";
+        timerElem.textContent = "Concurso finalizado.";
+        statusMsg.textContent = "Concurso finalizado.";
+        answerInput.disabled = true;
+        submitButton.disabled = true;
+    }
+
+    // Solo actualiza el estado si ha cambiado
+    if (newConcursoStatus !== window.concursoStatus) {
+        window.concursoStatus = newConcursoStatus;
+        mostrarEnunciado(); // Llama a mostrarEnunciado solo si el estado del concurso cambia
+    }
+}
+
+function secondsToHMS(s) {
+  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+  return `${h.toString().padStart(2,"0")}:${m.toString().padStart(2,"0")}:${sec.toString().padStart(2,"0")}`;
+}
+
+document.getElementById("submitForm").onsubmit = e => {
+  e.preventDefault();
+  const name = document.getElementById("submitName").value.trim();
+  const pid = document.getElementById("problemSelect").value;
+  const ans = document.getElementById("answerInput").value.trim();
+  const submitMsgElem = document.getElementById("submitMsg");
+
+  // Validación básica del lado del cliente para la respuesta
+  // Puedes expandir esto si sabes si la respuesta debe ser numérica, string, etc.
+  if (ans === "") {
+      submitMsgElem.textContent = "La respuesta no puede estar vacía.";
+      submitMsgElem.className = 'message error'; // Añadir clase de error
+      return;
+  }
+
+  fetch("/submit", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `name=${encodeURIComponent(name)}&problem=${encodeURIComponent(pid)}&answer=${encodeURIComponent(ans)}`
+  })
+  .then(response => {
+    if (!response.ok) { // Manejar errores HTTP
+        return response.json().then(err => Promise.reject(err));
+    }
+    return response.json();
+  })
+  .then(data => {
+    submitMsgElem.textContent = data.message || data.error || "";
+    submitMsgElem.className = data.error ? 'message error' : 'message success'; // Añadir clase de éxito/error
+    // Limpiar el campo de respuesta después de enviar
+    document.getElementById("answerInput").value = '';
+    // El ranking se actualizará vía socketio.on('ranking_update')
+  })
+  .catch(error => {
+    console.error("Error al enviar respuesta:", error);
+    submitMsgElem.textContent = error.message || "Error al enviar la respuesta.";
+    submitMsgElem.className = 'message error';
   });
+};
 
-  socket.on('force_reload', function() {
-    console.log('Force reload received. Reloading page...');
-    window.location.reload();
+function loadRanking() {
+  fetch("/ranking")
+  .then(response => {
+    if (!response.ok) { // Manejar errores HTTP
+        return response.json().then(err => Promise.reject(err));
+    }
+    return response.json();
+  })
+  .then(data => {
+    updateRankingTable(data); // Usar la nueva función para actualizar la tabla
+  })
+  .catch(error => {
+    console.error("Error al cargar el ranking:", error);
+    // Podrías mostrar un mensaje en el ranking table o en la consola
   });
+}
 
-  // Check if user is already logged in (e.g., after a page refresh)
-  fetch('/check_session')
-      .then(response => response.json())
-      .then(data => {
-          if (data.logged_in) {
-              userName = data.user_name;
-              document.getElementById("userNameDisplay").textContent = userName;
-              document.getElementById("loginDiv").style.display = "none";
-              document.getElementById("mainContent").style.display = "block";
-              fetchContestConfig();
-              loadRanking();
-          } else {
-              document.getElementById("loginDiv").style.display = "block";
-              document.getElementById("mainContent").style.display = "none";
-          }
-      })
-      .catch(error => {
-          console.error("Error checking session:", error);
-          // Fallback to showing login if session check fails
-          document.getElementById("loginDiv").style.display = "block";
-          document.getElementById("mainContent").style.display = "none";
-      });
+// Nueva función para actualizar la tabla de ranking (llamada por fetch y socket)
+function updateRankingTable(data) {
+    const tbody = document.querySelector("#rankingTable tbody");
+    tbody.innerHTML = "";
+    data.forEach(part => {
+      const row = document.createElement("tr");
+      // Mapear los estados de los problemas y unirlos en celdas de tabla
+      const problemStatusCells = Object.keys(problemasData).map(pId => {
+          const status = part.status[pId] || ""; // Asegurarse de que el status existe
+          return `<td>${status}</td>`;
+      }).join("");
 
+      row.innerHTML = `<td>${part.name}</td>${problemStatusCells}<td>${part.score}</td><td>${part.penalty}</td>`;
+      tbody.appendChild(row);
+    });
+}
 </script>
+
 </body>
 </html>

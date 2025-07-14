@@ -23,14 +23,14 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 # CONFIGURACIÓN
 # =====================
 # Hora de inicio por defecto (se puede cambiar desde admin)
-anno, mes, dia, hora, minuto = 2025, 7, 14, 10, 15
+anno, mes, dia, hora, minuto = 2025, 7, 14, 10, 45
 LOCAL_TIMEZONE = pytz.timezone("America/Mexico_City")
 START_TIME = LOCAL_TIMEZONE.localize(datetime(year=anno, month=mes, day=dia, hour=hora, minute=minuto))
 DURATION = timedelta(minutes=2)
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', 'una_clave_secreta_por_defecto_si_no_esta_en_env') # Necesario para sesiones
-socketio = SocketIO(app)
+socketio = SocketIO(app, async_mode='eventlet')
 
 # Estructuras de datos en memoria (considerar persistencia en producción)
 participants = {}

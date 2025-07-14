@@ -23,10 +23,10 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 # CONFIGURACIÓN
 # =====================
 # Hora de inicio por defecto (se puede cambiar desde admin)
-anno, mes, dia, hora, minuto = 2025, 7, 14, 16, 25
+anno, mes, dia, hora, minuto = 2025, 7, 14, 17, 25
 LOCAL_TIMEZONE = pytz.timezone("America/Mexico_City")
 START_TIME = LOCAL_TIMEZONE.localize(datetime(year=anno, month=mes, day=dia, hour=hora, minute=minuto))
-DURATION = timedelta(minutes=2)
+DURATION = timedelta(minutes=20)
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', 'una_clave_secreta_por_defecto_si_no_esta_en_env') # Necesario para sesiones

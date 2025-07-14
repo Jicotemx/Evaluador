@@ -5,23 +5,23 @@
     <title>Panel de Administración - Evaluador Numérico</title>
     <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
     <style>
-        body { font-family: sans-serif; margin: 20px; }
-        .container { max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
-							 
-						 
-						  
-									
-								   
-							   
-												  
-		 
+        body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
         input[type="password"], input[type="datetime-local"], input[type="number"] {
             width: calc(100% - 22px);
             padding: 10px;
             margin: 5px 0 10px 0;
             border: 1px solid #ccc;
             border-radius: 4px;
-																					  
+            box-sizing: border-box; /* Para que el padding no afecte el ancho total */
         }
         button {
             padding: 10px 15px;
@@ -31,17 +31,17 @@
             border-radius: 4px;
             cursor: pointer;
             margin-right: 10px;
-											  
+            transition: background-color 0.2s;
         }
         button:hover { background-color: #0056b3; }
-        .message { margin-top: 15px; padding: 10px; border-radius: 4px; }
+        .message { margin-top: 15px; padding: 10px; border-radius: 4px; font-weight: bold; }
         .success { background-color: #d4edda; color: #155724; border-color: #c3e6cb; }
         .error { background-color: #f8d7da; color: #721c24; border-color: #f5c6cb; }
-        label { display: block; margin-top: 10px; }
-        .checkbox-group { margin-bottom: 15px; }
-        .checkbox-group label { display: inline-block; margin-right: 15px; }
-																									  
-																													 
+        label { display: block; margin-top: 10px; font-weight: bold; }
+        .checkbox-group { margin-bottom: 15px; padding: 10px; border: 1px dashed #eee; border-radius: 5px;}
+        .checkbox-group label { display: inline-block; margin-right: 15px; font-weight: normal;}
+        .checkbox-group input[type="checkbox"] { margin-right: 5px;}
+        .section-title { margin-top: 20px; margin-bottom: 10px; color: #333; }
     </style>
 </head>
 <body>
@@ -49,13 +49,13 @@
         <h1>Panel de Administración</h1>
 
         <form id="adminForm">
-            <label for="adminKey">Contraseña de Administrador:</label>
+            <label for="adminKey" class="section-title">Contraseña de Administrador:</label>
             <input type="password" id="adminKey" required><br>
 
-            <h2>Acciones</h2>
+            <h2 class="section-title">Acciones</h2>
             <div class="checkbox-group">
                 <label><input type="checkbox" name="acciones" value="cambiar_hora" id="chkChangeTime"> Cambiar Hora de Inicio</label>
-                <input type="datetime-local=YYYY-MM-DDThh:mm" id="newStartTime" disabled><br>
+                <input type="datetime-local" id="newStartTime" disabled><br>
 
                 <label><input type="checkbox" name="acciones" value="cambiar_duracion" id="chkChangeDuration"> Cambiar Duración (minutos)</label>
                 <input type="number" id="newDuration" min="1" disabled><br>
@@ -63,19 +63,18 @@
                 <label><input type="checkbox" name="acciones" value="recargar_problemas" id="chkReloadProblems"> Recargar Problemas y Reevaluar</label><br>
             </div>
             
-            <button type="submit">Ejecutar Acciones</button>
-            <button type="button" onclick="goToPlayerPage()">Ir a Página de Jugador</button>
+            <button type="submit">Ejecutar Acciones Seleccionadas</button>
             <button type="button" onclick="sendResultEmail()">Enviar Correo de Resultados</button>
-																																																							
+            <button type="button" onclick="goToPlayerPage()">Ir a Página de Jugador</button>
         </form>
 
         <div id="adminMessage" class="message" aria-live="polite"></div>
     </div>
 
     <script>
-																															   
-																												   
-        const socket = io(); // Conectar Socket.IO
+        // No necesitamos socket.io directamente en admin.html para las acciones POST
+        // pero lo mantenemos si el servidor lo necesita para el force_reload
+        const socket = io(); 
 
         document.addEventListener('DOMContentLoaded', () => {
             // Habilitar/deshabilitar campos de entrada según las casillas
@@ -84,13 +83,13 @@
                 // Opcional: establecer la hora actual si se habilita
                 if (this.checked) {
                     const now = new Date();
-                    const offset = now.getTimezoneOffset() * 60000; // offset in milliseconds
-                    const localIsoString = (new Date(now - offset)).toISOString().slice(0, -8);
-																															
-																																																						
-																																																								 
-																																													
-                    document.getElementById('newStartTime').value = localIsoString;
+                    // Ajustar para el formato datetime-local (AAAA-MM-DDTHH:MM)
+                    const year = now.getFullYear();
+                    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+                    const day = now.getDate().toString().padStart(2, '0');
+                    const hours = now.getHours().toString().padStart(2, '0');
+                    const minutes = now.getMinutes().toString().padStart(2, '0');
+                    document.getElementById('newStartTime').value = `${year}-${month}-${day}T${hours}:${minutes}`;
                 }
             });
             document.getElementById('chkChangeDuration').addEventListener('change', function() {
@@ -117,9 +116,9 @@
             formData.append('clave', adminKey);
             selectedActions.forEach(action => formData.append('acciones', action));
             if (selectedActions.includes('cambiar_hora')) {
-														
-																									   
-                formData.append('hora_inicio', newStartTime);
+                // Formato para Python: YYYY-MM-DD HH:MM
+                const formattedTime = newStartTime.replace('T', ' ');
+                formData.append('hora_inicio', formattedTime);
             }
             if (selectedActions.includes('cambiar_duracion')) {
                 formData.append('duracion_min', newDuration);
@@ -136,11 +135,11 @@
                 adminMessageDiv.className = data.error ? 'message error' : 'message success';
                 if (data.error) {
                     console.error("Error del administrador:", data.error);
-						
-																																																 
-																																																																		 
-																																																								
-																																																							 
+                } else {
+                    // Si la acción fue exitosa, podrías querer desmarcar las casillas o limpiar los campos
+                    document.querySelectorAll('input[name="acciones"]:checked').forEach(cb => cb.checked = false);
+                    document.getElementById('newStartTime').disabled = true;
+                    document.getElementById('newDuration').disabled = true;
                 }
             })
             .catch(error => {
@@ -151,21 +150,17 @@
         });
 
         function sendResultEmail() {
-            const adminKey = document.getElementById('adminKey').value;
-																					  
+            // Actualmente la ruta /enviar_resultado en el backend NO pide la clave admin.
+            // Si quieres protegerla, deberías cambiarla a un POST y enviar la clave.
             const adminMessageDiv = document.getElementById('adminMessage');
-
-            // Podrías añadir una validación de la clave aquí antes de enviar
-            // o simplemente dejar que el backend la valide.
             
             fetch('/enviar_resultado', {
-                method: 'GET', // o POST si la proteges con la clave admin
-                // headers: { 'X-Admin-Key': adminKey } // Si quieres pasar la clave en un header
+                method: 'GET', // O cambiar a 'POST' y enviar la clave en el body/headers
             })
             .then(response => {
                 if (!response.ok) {
-																													  
-                    return response.text().then(text => Promise.reject(text));
+                    // Si el servidor responde con un error HTTP (ej. 403, 500)
+                    return response.text().then(text => Promise.reject(new Error(text || response.statusText)));
                 }
                 return response.text();
             })
@@ -174,7 +169,7 @@
                 adminMessageDiv.className = 'message success';
             })
             .catch(error => {
-                adminMessageDiv.textContent = 'Error al enviar el correo: ' + error;
+                adminMessageDiv.textContent = 'Error al enviar el correo: ' + error.message;
                 adminMessageDiv.className = 'message error';
             });
         }

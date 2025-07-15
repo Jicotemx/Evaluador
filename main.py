@@ -190,6 +190,18 @@ def reevaluar_todos():
     # Procesar el historial de envíos cronológicamente
     # Asegúrate de que historial_envios está ordenado por tiempo si el orden importa
     # (actualmente se añade al final, por lo que debería ser cronológico)
+    historial_temp=historial_envios
+    historial_envios=[]
+    for entry in historial_temp:
+            name, pid, answer, _, _, timestamp = entry                        
+            p = participants[name]
+            p["attempts"][pid] += 1
+            # Obtener la respuesta correcta actual del problema
+            p["attempts"][pid] = p["attempts"].get(pid, 0) + 1
+            problem_correct_answer = problems[pid]["respuesta"]
+            estado=califica(name,pid, timestamp,answer,problem_correct_answer)
+            historial_envios.append([name, pid, answer, estado, p["attempts"][pid], timestamp])    
+    """
     for entry in historial_envios:
         try:
             name, pid, answer_submitted, _, _, timestamp = entry
@@ -239,12 +251,14 @@ def reevaluar_todos():
             # Si ya está en ✔, no cambia aunque haya envíos incorrectos posteriores
         except Exception as e:
             logging.error(f"Error procesando entrada de historial '{entry}': {e}")
-            continue # Continuar con la siguiente entrada
-
+            continue # Continuar con la siguiente entrada        
     logging.info("Reevaluación completada.")
     # Emitir actualización de ranking a todos los clientes después de reevaluar
     socketio.emit('ranking_update', get_ranking_data())
-
+    """
+    socketio.emit('ranking_update', get_ranking_data())
+    return jsonify({"message": "Reevaluado"})
+    
 # =====================
 # FLASK ENDPOINTS
 # =====================

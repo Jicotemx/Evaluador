@@ -145,7 +145,29 @@ def generar_historial_csv(historial):
             logging.warning(f"Entrada de historial con formato incorrecto, saltando: {entrada}")
 
     return output.getvalue()
+def califica(name,pid, elapsed,answer,problem_correct_answer):
+    correct = False
+    try:
+        # Intenta comparar como flotantes si ambas respuestas parecen numéricas
+        submitted_val = float(answer)
+        correct_val = float(problem_correct_answer)
+        correct = abs(submitted_val - correct_val) < 1e-6
+    except ValueError:
+        # Si no son numéricas o la conversión falla, compara como cadenas
+        correct = answer.lower() == str(problem_correct_answer).lower() # Comparación insensible a mayúsculas
 
+    estado = "✔" if correct else "✖"
+    
+    # Solo actualizar score y penalty si el problema no había sido resuelto correctamente antes
+    if correct and p["status"][pid] != "✔":        
+        p["status"][pid] = "✔"
+        p["score"] += 1
+        p["penalty"] += elapsed + 5 * 60 * (p["attempts"][pid] - 1)
+        logging.info(f"Participante {name} acertó problema {pid}. Score: {p['score']}, Penalty: {p['penalty']}")
+    elif not correct and p["status"][pid] != "✔":
+        # Marcar como '✖' solo si aún no está resuelto correctamente
+        p["status"][pid] = "✖"
+        logging.info(f"Participante {name} falló problema {pid}. Intento {p['attempts'][pid]}.")    
 def reevaluar_todos():
     """
     Reevalúa todos los envíos históricos para recalcular los scores y penalizaciones
@@ -416,7 +438,8 @@ def submit():
 
     # Normalizar respuestas para comparación
     problem_correct_answer = problems[pid]["respuesta"]
-    
+    califica(name,pid, int(get_elapsed_time()),answer,problem_correct_answer)
+    """
     correct = False
     try:
         # Intenta comparar como flotantes si ambas respuestas parecen numéricas
@@ -440,7 +463,7 @@ def submit():
         # Marcar como '✖' solo si aún no está resuelto correctamente
         p["status"][pid] = "✖"
         logging.info(f"Participante {name} falló problema {pid}. Intento {p['attempts'][pid]}.")
-
+    """ 
     # Registrar en el historial de envíos
     # Asegúrate de que el timestamp sea segundos transcurridos para la reevaluación
     historial_envios.append([name, pid, answer, estado, p["attempts"][pid], int(get_elapsed_time())])

@@ -147,6 +147,7 @@ def generar_historial_csv(historial):
     return output.getvalue()
 def califica(name,pid, elapsed,answer,problem_correct_answer):
     correct = False
+    estado="✖"
     try:
         # Intenta comparar como flotantes si ambas respuestas parecen numéricas
         submitted_val = float(answer)
@@ -167,7 +168,8 @@ def califica(name,pid, elapsed,answer,problem_correct_answer):
     elif not correct and p["status"][pid] != "✔":
         # Marcar como '✖' solo si aún no está resuelto correctamente
         p["status"][pid] = "✖"
-        logging.info(f"Participante {name} falló problema {pid}. Intento {p['attempts'][pid]}.")    
+        logging.info(f"Participante {name} falló problema {pid}. Intento {p['attempts'][pid]}.")   
+    return estado    
 def reevaluar_todos():
     """
     Reevalúa todos los envíos históricos para recalcular los scores y penalizaciones
@@ -438,7 +440,7 @@ def submit():
 
     # Normalizar respuestas para comparación
     problem_correct_answer = problems[pid]["respuesta"]
-    califica(name,pid, int(get_elapsed_time()),answer,problem_correct_answer)
+    estado=califica(name,pid, int(get_elapsed_time()),answer,problem_correct_answer)
     """
     correct = False
     try:

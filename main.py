@@ -196,8 +196,7 @@ def reevaluar_todos():
             name, pid, answer, _, _, timestamp = entry                        
             p = participants[name]
             p["attempts"][pid] += 1
-            # Obtener la respuesta correcta actual del problema
-            p["attempts"][pid] = p["attempts"].get(pid, 0) + 1
+            # Obtener la respuesta correcta actual del problemaf           
             correct_answer = problems[pid]["respuesta"]
             
             # Calificar el envío usando la función existente

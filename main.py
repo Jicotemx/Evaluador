@@ -146,6 +146,7 @@ def generar_historial_csv(historial):
 
     return output.getvalue()
 def califica(name,pid, elapsed,answer,problem_correct_answer):
+    p = participants[name]
     correct = False
     estado="✖"
     try:

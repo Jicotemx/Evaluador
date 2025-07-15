@@ -190,74 +190,23 @@ def reevaluar_todos():
     # Procesar el historial de envíos cronológicamente
     # Asegúrate de que historial_envios está ordenado por tiempo si el orden importa
     # (actualmente se añade al final, por lo que debería ser cronológico)
-    historial_temp=historial_envios
-    historial_envios=[]
+    historial_temp=list(historial_envios)
+    historial_envios.clear()
     for entry in historial_temp:
             name, pid, answer, _, _, timestamp = entry                        
             p = participants[name]
             p["attempts"][pid] += 1
             # Obtener la respuesta correcta actual del problema
             p["attempts"][pid] = p["attempts"].get(pid, 0) + 1
-            problem_correct_answer = problems[pid]["respuesta"]
-            estado=califica(name,pid, timestamp,answer,problem_correct_answer)
-            historial_envios.append([name, pid, answer, estado, p["attempts"][pid], timestamp])    
-    """
-    for entry in historial_envios:
-        try:
-            name, pid, answer_submitted, _, _, timestamp = entry
-            
-            if name not in participants:
-                logging.warning(f"Participante '{name}' no encontrado durante reevaluación. Saltando envío.")
-                continue # Saltar si el participante no existe (quizás fue eliminado o nunca se registró)
-
-            if pid not in problems:
-                logging.warning(f"Problema '{pid}' no encontrado durante reevaluación. Saltando envío.")
-                continue # Saltar si el problema ya no existe
-
-            p = participants[name]
-
-            # Incrementar los intentos (ahora basado en el historial, no en el submit original)
-            p["attempts"][pid] += 1
-
-            # Obtener la respuesta correcta actual del problema
             correct_answer = problems[pid]["respuesta"]
-
-            correct = False
-            try:
-                # Intenta comparación numérica si ambas son numéricas
-                # Es crucial que 'answer_submitted' se convierta a un tipo que permita la comparación
-                # Si el historial guarda la respuesta como string, convertir a float
-                correct_submitted_val = float(answer_submitted)
-                correct_problem_val = float(correct_answer)
-                correct = abs(correct_submitted_val - correct_problem_val) < 1e-6
-            except ValueError:
-                # Si alguna no es numérica, compara como string
-                correct = str(answer_submitted).strip() == str(correct_answer).strip()
-            except TypeError: # Manejar caso donde correct_answer no sea comparable como float
-                 correct = str(answer_submitted).strip() == str(correct_answer).strip()
-
-
-            # Solo sumar puntos y penalización si no había acertado antes
-            if correct and p["status"][pid] != "✔":
-                p["status"][pid] = "✔"
-                p["score"] += 1
-                # Recalcular penalización usando el timestamp del envío original
-                # El timestamp en historial_envios debe ser segundos transcurridos desde START_TIME
-                # Asegúrate de que el formato de 'timestamp' en historial_envios sea adecuado (int segundos)
-                p["penalty"] += int(timestamp) + 5 * 60 * (p["attempts"][pid] - 1)
-            elif not correct and p["status"][pid] != "✔":
-                # Marcar como '✖' si no es correcta Y no ha sido acertada antes
-                p["status"][pid] = "✖" # Solo marca si aún no está resuelto
-            # Si ya está en ✔, no cambia aunque haya envíos incorrectos posteriores
-        except Exception as e:
-            logging.error(f"Error procesando entrada de historial '{entry}': {e}")
-            continue # Continuar con la siguiente entrada        
+            
+            # Calificar el envío usando la función existente
+            estado = califica(name, pid, timestamp, answer, correct_answer)            
+            
+            historial_envios.append([name, pid, answer, estado, p["attempts"][pid], timestamp])    
     logging.info("Reevaluación completada.")
-    # Emitir actualización de ranking a todos los clientes después de reevaluar
     socketio.emit('ranking_update', get_ranking_data())
-    """
-    socketio.emit('ranking_update', get_ranking_data())
-    return jsonify({"message": "Reevaluado"})
+    return jsonify({"message": "Reevaluación completada correctamente"})
     
 # =====================
 # FLASK ENDPOINTS

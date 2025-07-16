@@ -16,13 +16,33 @@
       --borde-radio: 12px;
       --sombra-suave: 0 10px 30px rgba(0, 0, 0, 0.2);
     }
-
+   
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
-
+    .author-logo {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 60px; /* Tamaño deseado */
+  height: 60px;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  z-index: 1000; /* Para que esté por encima de otros elementos */
+  opacity: 0.8; /* Leve transparencia */
+  transition: opacity 0.3s;
+}
+.author-logo:hover {
+  opacity: 1;
+}
+.author-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
     body {
       background: radial-gradient(circle at top left, #1a2a6c, #0f2027, #1a2a6c);
       color: var(--color-acento);
@@ -208,6 +228,11 @@
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
 </head>
 <body>
+  </div> <!-- Cierre del container -->
+<div class="author-logo">
+  <img src="{{ url_for('static', filename='JA.png') }}" alt="Logo del autor">
+</div>
+
   <div class="container">
     <div class="logo">🧮</div>
     <h1>Zin'achi</h1>

@@ -411,7 +411,7 @@ def submit():
     # Emitir actualización a todos los clientes
     socketio.emit('ranking_update', get_ranking_data())
     estado_texto = "ACEPTADA" if estado == "✔" else "RECHAZADA"
-    mensaje = f"Resueltado problema {pid}: {estado}"
+    mensaje = f"Resultado del envío  del problema {pid}: {estado}"
     return jsonify({"message": mensaje, "status": estado})
 
 def get_ranking_data():

@@ -379,7 +379,8 @@ def ejecutar_accion():
 
 @app.route("/submit", methods=["POST"])
 def submit():
-    # Asegurarse de que el usuario esté logueado
+    logging.info(f"Problems actual: {problems}")
+    # Asegurarse de que el usuario esté logueado    
     if 'logged_in_user' not in session:
         return jsonify({"error": "No autorizado. Por favor inicie sesión."}), 401
     

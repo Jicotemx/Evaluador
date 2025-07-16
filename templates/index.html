@@ -5,10 +5,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Evaluador numérico 🧮</title>
-  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&family=Poppins:wght=400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Google Fonts para una tipografía elegante -->
+  <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <!-- MathJax para renderizar ecuaciones LaTeX en el enunciado -->
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <style>
-    /* Global Styles */
+    /* Estilos Globales */
     * {
       box-sizing: border-box;
       margin: 0;
@@ -16,65 +18,65 @@
     }
 
     body {
-      font-family: 'Open Sans', sans-serif; /* Primary body font */
-      background: #f0f2f5; /* Light gray background */
+      font-family: 'Open Sans', sans-serif; /* Fuente principal para el cuerpo */
+      background: #f0f2f5; /* Fondo gris claro suave */
       color: #333;
       min-height: 100vh;
-      display: flex; /* Use flexbox for easy centering of content */
+      display: flex; /* Usar flexbox para centrar el contenido */
       flex-direction: column;
-      align-items: center; /* Center content horizontally */
+      align-items: center; /* Centrar contenido horizontalmente */
       padding: 20px;
     }
 
-    /* Header */
+    /* Encabezado Principal */
     header {
       width: 100%;
       max-width: 1200px;
       text-align: center;
-      margin-bottom: 40px; /* More space below header */
+      margin-bottom: 40px; /* Más espacio debajo del encabezado */
       padding: 20px 0;
-      color: #1a2a6c; /* A deep blue for contrast */
+      color: #1a2a6c; /* Un azul oscuro para contraste */
     }
 
     h1 {
-      font-family: 'Poppins', sans-serif;
-      font-size: 2.8em; /* Larger title */
-      font-weight: 700; /* Bolder */
+      font-family: 'Poppins', sans-serif; /* Fuente para títulos principales */
+      font-size: 2.8em; /* Título más grande */
+      font-weight: 700; /* Más negrita */
       margin-bottom: 10px;
-      color: #1a2a6c; /* Or a darker version of your theme color */
-      letter-spacing: -0.5px; /* Slightly tighter letter spacing */
+      color: #1a2a6c; /* O una versión más oscura del color de tu tema */
+      letter-spacing: -0.5px; /* Espaciado de letras ligeramente más ajustado */
     }
 
-    /* Main Container for Cards */
+    /* Contenedor Principal para las Tarjetas */
     .container {
       width: 100%;
-      max-width: 1200px; /* Slightly wider */
+      max-width: 1200px; /* Ancho ligeramente mayor */
       margin: 0 auto;
-      display: flex; /* Flexbox for main content layout */
-      flex-wrap: wrap; /* Allow wrapping on smaller screens */
-      gap: 30px; /* Space between cards */
-      justify-content: center; /* Center cards if they don't fill the width */
+      display: flex; /* Flexbox para el diseño principal del contenido */
+      flex-wrap: wrap; /* Permitir que las tarjetas se envuelvan en pantallas más pequeñas */
+      gap: 30px; /* Espacio entre tarjetas */
+      justify-content: center; /* Centrar tarjetas si no llenan el ancho */
     }
 
-    /* Card Styling */
+    /* Estilo de Tarjetas (Cards) */
     .card {
-      background-color: #ffffff; /* Pure white */
+      background-color: #ffffff; /* Blanco puro */
       border-radius: 12px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08); /* Softer, more diffused shadow */
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08); /* Sombra más suave y difusa */
       padding: 30px;
-      flex: 1; /* Allow cards to grow and shrink */
-      min-width: 300px; /* Minimum width before wrapping */
+      flex: 1; /* Permitir que las tarjetas crezcan y se encojan */
+      min-width: 300px; /* Ancho mínimo antes de envolver */
       position: relative;
       overflow: hidden;
-      transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; /* Smooth transitions */
+      transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; /* Transiciones suaves */
     }
 
     .card:hover {
-      transform: translateY(-5px); /* Subtle lift on hover */
-      box-shadow: 0 12px 25px rgba(0, 0, 0, 0.12); /* Slightly stronger shadow on hover */
+      transform: translateY(-5px); /* Elevación sutil al pasar el ratón */
+      box-shadow: 0 12px 25px rgba(0, 0, 0, 0.12); /* Sombra ligeramente más fuerte al pasar el ratón */
     }
 
-    /* Optional: Remove or modify the diagonal pattern */
+    /* Patrón diagonal opcional en las tarjetas */
     .card::before {
       content: '';
       position: absolute;
@@ -84,7 +86,7 @@
       height: 100%;
       background: linear-gradient(45deg, rgba(230, 230, 230, 0.1) 25%, transparent 25%, transparent 50%, rgba(230, 230, 230, 0.1) 50%, rgba(230, 230, 230, 0.1) 75%, transparent 75%, transparent);
       background-size: 20px 20px;
-      opacity: 0.2; /* Make it more subtle */
+      opacity: 0.2; /* Hacerlo más sutil */
       z-index: 0;
     }
 
@@ -93,13 +95,13 @@
       font-size: 1.8em;
       font-weight: 600;
       color: #333;
-      margin-bottom: 25px; /* More spacing below subtitles */
-      border-bottom: 2px solid #eee; /* Subtle separator */
+      margin-bottom: 25px; /* Más espacio debajo de los subtítulos */
+      border-bottom: 2px solid #eee; /* Separador sutil */
       padding-bottom: 10px;
-      text-align: center; /* Center card titles */
+      text-align: center; /* Centrar títulos de tarjeta */
     }
 
-    /* Form Elements */
+    /* Elementos de Formulario */
     label {
       display: block;
       margin-bottom: 8px;
@@ -116,7 +118,7 @@
       padding: 12px 15px;
       margin-bottom: 15px;
       border: 1px solid #ddd;
-      border-radius: 8px; /* More rounded corners */
+      border-radius: 8px; /* Esquinas más redondeadas */
       font-size: 1em;
       color: #555;
       background-color: #fcfcfc;
@@ -128,57 +130,57 @@
     input[type="number"]:focus,
     select:focus {
       outline: none;
-      border-color: #007bff; /* Highlight on focus */
-      box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15); /* Subtle blue glow */
+      border-color: #007bff; /* Resaltar al enfocar */
+      box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15); /* Brillo azul sutil */
     }
 
     button {
       padding: 12px 25px;
-      background-color: #007bff; /* Primary blue */
+      background-color: #007bff; /* Azul primario */
       color: white;
       border: none;
-      border-radius: 8px; /* More rounded corners */
+      border-radius: 8px; /* Esquinas más redondeadas */
       font-size: 1.1em;
       cursor: pointer;
       transition: background-color 0.3s ease, transform 0.1s ease;
-      font-weight: 600; /* Bolder text */
-      box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2); /* Subtle button shadow */
+      font-weight: 600; /* Texto más negrita */
+      box-shadow: 0 4px 10px rgba(0, 123, 255, 0.2); /* Sombra de botón sutil */
     }
 
     button:hover {
-      background-color: #0056b3; /* Darker blue on hover */
-      transform: translateY(-2px); /* Subtle lift */
+      background-color: #0056b3; /* Azul más oscuro al pasar el ratón */
+      transform: translateY(-2px); /* Elevación sutil */
     }
 
     button:active {
-      transform: translateY(0); /* Press effect */
+      transform: translateY(0); /* Efecto de presión */
     }
 
     .form-group {
-      margin-bottom: 20px; /* Space between form elements */
+      margin-bottom: 20px; /* Espacio entre elementos del formulario */
     }
 
     .button-group {
         display: flex;
-        gap: 15px; /* Space between buttons */
+        gap: 15px; /* Espacio entre botones */
         justify-content: center;
         margin-top: 20px;
     }
     .button-group button {
-        flex-grow: 1; /* Make buttons grow to fill space */
-        max-width: 250px; /* Limit max width of buttons */
+        flex-grow: 1; /* Hacer que los botones crezcan para llenar el espacio */
+        max-width: 250px; /* Limitar el ancho máximo de los botones */
     }
 
-    /* Message Styling (Success/Error) */
+    /* Estilo de Mensajes (Éxito/Error) */
     .message {
       padding: 12px 20px;
       margin-bottom: 20px;
       border-radius: 8px;
       font-weight: 600;
       text-align: center;
-      opacity: 0; /* Start hidden */
-      transform: translateY(-10px); /* Start slightly above */
-      animation: fadeInSlideDown 0.5s forwards; /* Animation for messages */
+      opacity: 0; /* Iniciar oculto */
+      transform: translateY(-10px); /* Iniciar ligeramente arriba */
+      animation: fadeInSlideDown 0.5s forwards; /* Animación para mensajes */
     }
 
     .message.success {
@@ -193,7 +195,7 @@
       border: 1px solid #f5c6cb;
     }
 
-    /* Keyframe animation for messages */
+    /* Animación de keyframes para mensajes */
     @keyframes fadeInSlideDown {
         to {
             opacity: 1;
@@ -201,57 +203,57 @@
         }
     }
 
-    /* Timer Styling */
+    /* Estilo del Temporizador */
     #timer {
       font-family: 'Poppins', sans-serif;
-      font-size: 3.5em; /* Larger timer */
+      font-size: 3.5em; /* Temporizador más grande */
       font-weight: 700;
-      color: #28a745; /* Green for active timer */
+      color: #28a745; /* Verde para el temporizador activo */
       text-align: center;
       margin-bottom: 20px;
-      background-color: #e6ffe6; /* Light green background */
+      background-color: #e6ffe6; /* Fondo verde claro */
       padding: 15px 20px;
       border-radius: 12px;
       border: 1px solid #c3e6cb;
       box-shadow: 0 4px 15px rgba(40, 167, 69, 0.1);
-      width: fit-content; /* Adjust width to content */
+      width: fit-content; /* Ajustar ancho al contenido */
       margin-left: auto;
       margin-right: auto;
     }
 
-    /* Style for when the timer is finished */
+    /* Estilo para cuando el temporizador ha terminado */
     #timer.finished {
-      color: #dc3545; /* Red when finished */
-      background-color: #ffe6e6; /* Light red background */
+      color: #dc3545; /* Rojo cuando ha terminado */
+      background-color: #ffe6e6; /* Fondo rojo claro */
       border-color: #f5c6cb;
       box-shadow: 0 4px 15px rgba(220, 53, 69, 0.1);
     }
 
-    /* Problem Enunciado Styling */
+    /* Estilo del Enunciado del Problema */
     .enunciado-container {
-      padding: 20px; /* Add internal padding */
+      padding: 20px; /* Relleno interno */
       background-color: #fefefe;
       border-radius: 8px;
-      border: 1px solid #eee; /* Subtle border */
+      border: 1px solid #eee; /* Borde sutil */
       margin-top: 20px;
     }
 
     .enunciado-container strong {
-      display: block; /* Make "Enunciado:" a block element */
+      display: block; /* Hacer que "Enunciado:" sea un elemento de bloque */
       font-size: 1.1em;
-      margin-bottom: 15px; /* More space below the title */
+      margin-bottom: 15px; /* Más espacio debajo del título */
       color: #1a2a6c;
       font-family: 'Poppins', sans-serif;
       font-weight: 600;
     }
 
     #math-content {
-        line-height: 1.8; /* Improve readability of math and text */
+        line-height: 1.8; /* Mejorar la legibilidad de las matemáticas y el texto */
         font-size: 1.05em;
         color: #444;
     }
     #math-content p {
-        margin-bottom: 1em; /* Space between paragraphs in MathJax content */
+        margin-bottom: 1em; /* Espacio entre párrafos en el contenido de MathJax */
     }
     #math-content ul, #math-content ol {
         margin-left: 25px;
@@ -261,65 +263,64 @@
         margin-bottom: 0.5em;
     }
 
-    /* Ranking Table Styling */
+    /* Estilo de la Tabla de Posiciones (Ranking) */
     table {
       width: 100%;
-      border-collapse: collapse; /* Remove double borders */
+      border-collapse: collapse; /* Eliminar bordes dobles */
       margin-top: 20px;
       background-color: #ffffff;
-      border-radius: 8px; /* Rounded corners for the table */
-      overflow: hidden; /* Ensures border-radius applies to content */
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); /* Subtle table shadow */
+      border-radius: 8px; /* Esquinas redondeadas para la tabla */
+      overflow: hidden; /* Asegura que el border-radius se aplique al contenido */
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); /* Sombra de tabla sutil */
     }
 
     th, td {
-      padding: 15px 20px; /* More padding */
+      padding: 15px 20px; /* Más relleno */
       text-align: left;
-      border-bottom: 1px solid #eee; /* Lighter border */
+      border-bottom: 1px solid #eee; /* Borde más claro */
     }
 
     th {
-      background-color: #e9ecef; /* Light gray header background */
-      color: #495057; /* Darker text for headers */
-      font-weight: 700; /* Bolder headers */
-      text-transform: uppercase; /* Uppercase for headers */
-      font-size: 0.9em; /* Slightly smaller font for headers */
+      background-color: #e9ecef; /* Fondo gris claro para el encabezado */
+      color: #495057; /* Texto más oscuro para los encabezados */
+      font-weight: 700; /* Encabezados más negrita */
+      text-transform: uppercase; /* Mayúsculas para los encabezados */
+      font-size: 0.9em; /* Fuente ligeramente más pequeña para los encabezados */
     }
 
     tr:nth-child(even) {
-      background-color: #f8f9fa; /* Zebra striping for readability */
+      background-color: #f8f9fa; /* Rayas de cebra para mejorar la legibilidad */
     }
 
     tr:hover {
-      background-color: #e2f0ff; /* Subtle highlight on row hover */
+      background-color: #e2f0ff; /* Resaltado sutil al pasar el ratón por la fila */
       cursor: pointer;
     }
 
-    /* Style for the problem status cells */
+    /* Estilo para las celdas de estado del problema */
     td {
       font-weight: 500;
       color: #333;
     }
 
-    /* Specific styles for problem status (e.g., 'Correcto', 'Incorrecto', 'Pendiente') */
-    td.status-correct { color: #28a745; font-weight: 600; }
-    td.status-incorrect { color: #dc3545; font-weight: 600; }
-    td.status-pending { color: #ffc107; font-weight: 600; }
-    td.status-not-attempted { color: #6c757d; font-style: italic; }
+    /* Estilos específicos para el estado del problema (ej. '✔', '✖', '') */
+    td.status-correct { color: #28a745; font-weight: 600; } /* Verde para correcto */
+    td.status-incorrect { color: #dc3545; font-weight: 600; } /* Rojo para incorrecto */
+    td.status-not-attempted { color: #6c757d; font-style: italic; } /* Gris e itálica para no intentado */
 
 
-    /* Responsive Design */
+    /* Diseño Responsivo */
     @media (max-width: 768px) {
       body {
         padding: 15px;
       }
       .container {
-        flex-direction: column; /* Stack cards vertically on small screens */
+        flex-direction: column; /* Apilar tarjetas verticalmente en pantallas pequeñas */
         gap: 20px;
       }
       .card {
-        min-width: unset; /* Remove min-width constraint */
-        width: 100%; /* Full width */
+        min-width: unset; /* Eliminar restricción de ancho mínimo */
+        width: 100%; /* Ancho completo */
       }
       h1 {
         font-size: 2em;
@@ -328,11 +329,11 @@
         font-size: 1.5em;
       }
       th, td {
-        padding: 10px 15px; /* Reduce padding on smaller screens */
+        padding: 10px 15px; /* Reducir relleno en pantallas más pequeñas */
         font-size: 0.9em;
       }
       .button-group {
-        flex-direction: column; /* Stack buttons vertically */
+        flex-direction: column; /* Apilar botones verticalmente */
       }
       .button-group button {
           width: 100%;
@@ -351,6 +352,7 @@
   </header>
 
   <div class="container">
+    <!-- Sección de Tiempo y Login/Envío -->
     <div id="submissionSection" class="card">
       <h2>Tiempo restante</h2>
       <div id="timer">Cargando...</div>
@@ -391,32 +393,44 @@
       </div>
     </div>
 
+    <!-- Sección de Ranking -->
     <div id="rankingSection" class="card">
       <h2>Tabla de Posiciones</h2>
       <table id="rankingTable">
         <thead>
           <tr>
             <th>Equipo</th>
+            <!-- Las cabeceras de los problemas se insertarán aquí por JS -->
             <th>Puntos</th>
             <th>Penalización</th>
           </tr>
         </thead>
         <tbody>
-          </tbody>
+          <!-- Filas de ranking se insertarán aquí -->
+        </tbody>
       </table>
+      <div class="admin-link" style="text-align: center; margin-top: 20px;">
+        <p><a href="/admin" style="color: #007bff; text-decoration: none; font-weight: bold;">Ir a Panel de Administración</a></p>
+      </div>
     </div>
   </div>
 
   <script>
-    // Tu JavaScript existente, con la modificación a updateRankingTable
     const socket = io();
     let problemasData = {};
     let currentProblemId = null; // Para controlar si el enunciado ha cambiado
     let currentEnunciadoHtml = null; // Para evitar re-renderizados innecesarios de MathJax
 
-    // Obtener problemas y ranking iniciales del servidor
+    let timerInterval; // Para almacenar el ID del intervalo del temporizador
+    let timerFinished = false; // Bandera para detener el intervalo si el temporizador ha terminado
+    let START_TIME_SERVER; // Se establecerá desde el servidor en la carga inicial o actualización de configuración
+    let DURATION_MINUTES; // Se establecerá desde el servidor
+
+    // Configuración de MathJax (movida al head para una carga más temprana)
+    // Ya está en el <head> de la plantilla HTML.
+
     document.addEventListener('DOMContentLoaded', () => {
-        // Cargar problemas iniciales
+        // Cargar problemas iniciales desde el backend
         fetch('/get_problems')
             .then(response => response.json())
             .then(data => {
@@ -424,13 +438,14 @@
                 populateProblemSelect(problemasData);
                 // Si ya hay un problema seleccionado (por ejemplo, al recargar la página),
                 // asegúrate de que el enunciado se muestre.
-                if (document.getElementById('problemSelect').value) {
-                    showProblemEnunciado(document.getElementById('problemSelect').value);
+                const initialProblemSelectValue = document.getElementById('problemSelect').value;
+                if (initialProblemSelectValue) {
+                    showProblemEnunciado(initialProblemSelectValue);
                 }
             })
             .catch(error => console.error('Error al cargar problemas:', error));
 
-        // Cargar ranking inicial
+        // Cargar ranking inicial desde el backend
         fetch('/get_ranking')
             .then(response => response.json())
             .then(data => {
@@ -439,38 +454,36 @@
             })
             .catch(error => console.error('Error al cargar ranking:', error));
 
-        // Cargar estado de la sesión y el tiempo
+        // Verificar el estado de la sesión y obtener datos iniciales del concurso (incluido el tiempo)
         checkLoginStatus();
-        updateTimerDisplay(); // Initial display
-
-        // Configurar intervalo para el temporizador si el tiempo no ha terminado
-        if (!timerFinished) { // Check if the timer has already finished on load
-            setInterval(updateTimerDisplay, 1000);
-        }
+        // El intervalo del temporizador se iniciará en checkLoginStatus después de obtener la hora del servidor
     });
 
-    // Manejar actualizaciones del ranking desde el servidor
+    // Manejar actualizaciones del ranking desde el servidor vía Socket.IO
     socket.on('ranking_update', (data) => {
-        console.log("Ranking actualizado recibido via socket:", data);
-        updateRankingTable(data); // Llama a una función dedicada para actualizar la tabla
+        console.log("Ranking actualizado recibido vía socket:", data);
+        updateRankingTable(data); // Llamar a la función para actualizar la tabla
     });
 
-    // Manejar actualizaciones de configuración (como START_TIME o DURATION)
+    // Manejar actualizaciones de configuración (como START_TIME o DURATION) desde el servidor
     socket.on('config_update', (data) => {
-        console.log("Configuración actualizada recibida via socket:", data);
+        console.log("Configuración actualizada recibida vía socket:", data);
         if (data.type === 'time') {
-            // Suponiendo que la hora del servidor se envía en un formato ISO
             START_TIME_SERVER = new Date(data.startTime);
             DURATION_MINUTES = data.durationMinutes;
-            updateTimerDisplay(); // Actualiza inmediatamente el temporizador
+            updateTimerDisplay(); // Actualizar el temporizador inmediatamente
+            // Reiniciar el intervalo del temporizador si estaba terminado y ahora está en marcha de nuevo
+            if (timerFinished && !timerInterval) {
+                timerInterval = setInterval(updateTimerDisplay, 1000);
+            }
         } else if (data.type === 'problems') {
             problemasData = data.value;
             populateProblemSelect(problemasData);
-            // Si hay un problema seleccionado actualmente, recarga su enunciado
+            // Si hay un problema seleccionado actualmente, recargar su enunciado
             if (document.getElementById('problemSelect').value) {
                 showProblemEnunciado(document.getElementById('problemSelect').value);
             }
-            // También re-renderiza la tabla de ranking si es necesario para nuevas columnas de problemas
+            // Volver a renderizar la tabla de ranking si es necesario para nuevas columnas de problemas
             fetch('/get_ranking')
                 .then(response => response.json())
                 .then(data => {
@@ -481,22 +494,17 @@
         }
     });
 
-    // Manejar recarga forzada
+    // Manejar recarga forzada solicitada por el servidor
     socket.on('force_reload', () => {
         console.log("Recarga forzada solicitada por el servidor");
         location.reload();
     });
 
-
     // ===================================
     // Funciones de UI y Lógica del Cliente
     // ===================================
 
-    let timerFinished = false; // Flag to stop interval if timer is done
-    let START_TIME_SERVER; // This will be set by the server on initial load or config update
-    let DURATION_MINUTES; // This will be set by the server
-
-
+    // Función asíncrona para verificar el estado de la sesión al cargar la página
     async function checkLoginStatus() {
         try {
             const response = await fetch('/check_login_status');
@@ -509,17 +517,23 @@
                 document.getElementById('loginForm').style.display = 'block';
                 document.getElementById('problemSelectionAndSubmission').style.display = 'none';
             }
-            // Update time based on server data, important for initial load
+            // Actualizar el tiempo basándose en los datos del servidor, importante para la carga inicial
             START_TIME_SERVER = new Date(data.start_time);
             DURATION_MINUTES = data.duration_minutes;
-            updateTimerDisplay(); // Call immediately to show correct time
+            updateTimerDisplay(); // Llamar inmediatamente para mostrar la hora correcta
+
+            // Iniciar el intervalo del temporizador solo una vez
+            if (!timerInterval) {
+                timerInterval = setInterval(updateTimerDisplay, 1000);
+            }
+
         } catch (error) {
-            console.error('Error checking login status:', error);
-            displayMessage('loginMessage', 'Error al verificar estado de sesión.', 'error');
+            console.error('Error al verificar el estado de la sesión:', error);
+            displayMessage('loginMessage', 'Error al verificar estado de sesión. Intenta recargar la página.', 'error');
         }
     }
 
-
+    // Función para actualizar la visualización del temporizador
     function updateTimerDisplay() {
         if (!START_TIME_SERVER || !DURATION_MINUTES) {
             document.getElementById('timer').textContent = "Esperando hora de inicio...";
@@ -535,9 +549,14 @@
         if (timeRemaining <= 0) {
             timerElement.textContent = "¡Tiempo terminado!";
             timerElement.classList.add('finished');
-            timerFinished = true; // Set flag to true
-            // Optionally, disable submission form here
-            document.getElementById('problemSelectionAndSubmission').querySelector('button[onclick="submitAnswer()"]').disabled = true;
+            timerFinished = true; // Establecer bandera a verdadero
+            clearInterval(timerInterval); // Detener el intervalo
+            timerInterval = null; // Limpiar el ID del intervalo
+            // Opcionalmente, deshabilitar el formulario de envío aquí
+            const submitButton = document.getElementById('problemSelectionAndSubmission').querySelector('button[onclick="submitAnswer()"]');
+            if (submitButton) {
+                submitButton.disabled = true;
+            }
             return;
         }
 
@@ -550,10 +569,10 @@
 
         timerElement.textContent = `${formatTime(hours)}:${formatTime(minutes)}:${formatTime(seconds)}`;
         timerElement.classList.remove('finished');
-        timerFinished = false; // Ensure flag is false if timer is running
+        timerFinished = false; // Asegurarse de que la bandera sea falsa si el temporizador está en marcha
     }
 
-
+    // Función para mostrar mensajes de éxito o error
     function displayMessage(elementId, message, type) {
         const messageDiv = document.getElementById(elementId);
         messageDiv.textContent = message;
@@ -564,6 +583,7 @@
         }, 5000); // Ocultar después de 5 segundos
     }
 
+    // Función asíncrona para el inicio de sesión
     async function login() {
         const teamName = document.getElementById('teamName').value;
         const teamPassword = document.getElementById('teamPassword').value;
@@ -574,21 +594,21 @@
                 body: JSON.stringify({ team_name: teamName, password: teamPassword })
             });
             const data = await response.json();
-            if (data.success) {
+            if (response.ok && data.success) { // Verificar response.ok para estados HTTP 2xx
                 displayMessage('loginMessage', data.message, 'success');
                 document.getElementById('loginForm').style.display = 'none';
                 document.getElementById('problemSelectionAndSubmission').style.display = 'block';
                 document.getElementById('loggedInTeamName').textContent = teamName;
-                socket.emit('login_update'); // Notificar al servidor que un usuario ha iniciado sesión
             } else {
                 displayMessage('loginMessage', data.message, 'error');
             }
         } catch (error) {
-            console.error('Error during login:', error);
+            console.error('Error durante el inicio de sesión:', error);
             displayMessage('loginMessage', 'Error al intentar ingresar. Inténtalo de nuevo.', 'error');
         }
     }
 
+    // Función asíncrona para el registro de nuevos equipos
     async function register() {
         const teamName = document.getElementById('teamName').value;
         const teamPassword = document.getElementById('teamPassword').value;
@@ -599,97 +619,97 @@
                 body: JSON.stringify({ team_name: teamName, password: teamPassword })
             });
             const data = await response.json();
-            if (data.success) {
+            if (response.ok && data.success) {
                 displayMessage('loginMessage', data.message, 'success');
             } else {
                 displayMessage('loginMessage', data.message, 'error');
             }
         } catch (error) {
-            console.error('Error during registration:', error);
+            console.error('Error durante el registro:', error);
             displayMessage('loginMessage', 'Error al intentar registrar. Inténtalo de nuevo.', 'error');
         }
     }
 
+    // Función asíncrona para cerrar sesión
     async function logout() {
         try {
             const response = await fetch('/logout', {
                 method: 'POST'
             });
             const data = await response.json();
-            if (data.success) {
+            if (response.ok && data.success) {
                 displayMessage('submissionMessage', data.message, 'success');
                 document.getElementById('loginForm').style.display = 'block';
                 document.getElementById('problemSelectionAndSubmission').style.display = 'none';
                 document.getElementById('loggedInTeamName').textContent = '';
-                socket.emit('logout_update'); // Notificar al servidor que un usuario ha cerrado sesión
             } else {
                 displayMessage('submissionMessage', data.message, 'error');
             }
         } catch (error) {
-            console.error('Error during logout:', error);
+            console.error('Error durante el cierre de sesión:', error);
             displayMessage('submissionMessage', 'Error al intentar cerrar sesión. Inténtalo de nuevo.', 'error');
         }
     }
 
+    // Función para poblar el selector de problemas
     function populateProblemSelect(problems) {
         const select = document.getElementById('problemSelect');
         select.innerHTML = '<option value="">-- Selecciona un problema --</option>'; // Opción por defecto
-        for (const pid in problems) {
+        const problemIds = Object.keys(problems).sort(); // Ordenar IDs de problemas alfabéticamente
+        problemIds.forEach(pid => {
             const option = document.createElement('option');
             option.value = pid;
             option.textContent = `Problema ${pid}`;
             select.appendChild(option);
-        }
-        select.removeEventListener('change', handleProblemSelectChange); // Remove old listener
-        select.addEventListener('change', handleProblemSelectChange); // Add new listener
+        });
+        select.removeEventListener('change', handleProblemSelectChange); // Eliminar listener antiguo
+        select.addEventListener('change', handleProblemSelectChange); // Añadir nuevo listener
     }
 
+    // Manejador de cambio para el selector de problemas
     function handleProblemSelectChange() {
         const selectedProblemId = document.getElementById('problemSelect').value;
         if (selectedProblemId) {
             showProblemEnunciado(selectedProblemId);
         } else {
             document.getElementById('math-content').innerHTML = "Selecciona un problema para ver su enunciado.";
-            currentProblemId = null; // Reset current problem ID
-            currentEnunciadoHtml = null; // Reset current enunciado content
+            currentProblemId = null; // Reiniciar ID de problema actual
+            currentEnunciadoHtml = null; // Reiniciar contenido del enunciado actual
         }
     }
 
+    // Función para mostrar el enunciado del problema y renderizar MathJax
     function showProblemEnunciado(pid) {
         const enunciadoDiv = document.getElementById('math-content');
         let newEnunciadoContent = '';
-        if (problemasData[pid]) {
-            newEnunciadoContent = `
-            <div class="enunciado-container">
-                <strong>Enunciado:</strong>
-                <div id="math-content-inner">${problemasData[pid].enunciado}</div>
-            </div>
-        `;
+        if (problemasData[pid] && problemasData[pid].enunciado) {
+            newEnunciadoContent = problemasData[pid].enunciado;
+        } else {
+            newEnunciadoContent = "Problema no encontrado o sin enunciado.";
         }
 
-        // Only update the DOM and MathJax if the enunciate content has changed
-        // or if the selected problem has changed (this is important for the dropdown)
+        // Solo actualizar el DOM y MathJax si el contenido del enunciado ha cambiado
+        // o si el problema seleccionado ha cambiado (importante para el desplegable)
         if (newEnunciadoContent !== currentEnunciadoHtml || pid !== currentProblemId) {
             enunciadoDiv.innerHTML = newEnunciadoContent;
-            currentEnunciadoHtml = newEnunciadoContent; // Save current content
-            currentProblemId = pid; // Save current problem ID
+            currentEnunciadoHtml = newEnunciadoContent; // Guardar contenido actual
+            currentProblemId = pid; // Guardar ID de problema actual
 
-            // Ensure MathJax renders after the DOM is ready
-            // and only if there's potential MathJax content
-            const mathContentContainer = document.getElementById("math-content-inner"); // Use inner ID
-            if (mathContentContainer && typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
-                // Use typesetClear to clear and then typesetPromise to render new content
-                MathJax.typesetClear([mathContentContainer]); // Clear previous MathJax content
-                MathJax.typesetPromise([mathContentContainer]).catch(err => {
-                    console.error("MathJax error:", err);
+            // Asegurarse de que MathJax se renderice después de que el DOM esté listo
+            // y solo si hay contenido MathJax potencial
+            if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+                // Usar typesetClear para limpiar y luego typesetPromise para renderizar el nuevo contenido
+                MathJax.typesetClear([enunciadoDiv]); // Limpiar el contenido anterior de MathJax
+                MathJax.typesetPromise([enunciadoDiv]).catch(err => {
+                    console.error("Error de MathJax:", err);
                 });
             } else if (typeof MathJax === 'undefined') {
-                console.warn("MathJax is not loaded or does not have typesetPromise.");
+                console.warn("MathJax no está cargado o no tiene typesetPromise.");
             }
         }
     }
 
-
+    // Función asíncrona para enviar la respuesta
     async function submitAnswer() {
         if (timerFinished) {
             displayMessage('submissionMessage', 'El tiempo ha terminado. No se pueden enviar más respuestas.', 'error');
@@ -715,79 +735,78 @@
                 body: JSON.stringify({ problem_id: problemId, answer: answer })
             });
             const data = await response.json();
-            if (data.success) {
+            if (response.ok && data.success) {
                 displayMessage('submissionMessage', data.message, 'success');
                 document.getElementById('answer').value = ''; // Limpiar campo de respuesta
-                // No es necesario actualizar el ranking aquí, el servidor lo emitirá
+                // El ranking se actualizará vía socket.io
             } else {
                 displayMessage('submissionMessage', data.message, 'error');
             }
         } catch (error) {
-            console.error('Error during submission:', error);
+            console.error('Error durante el envío:', error);
             displayMessage('submissionMessage', 'Error al enviar respuesta. Inténtalo de nuevo.', 'error');
         }
     }
 
-    // Function to update problem headers dynamically
+    // Función para actualizar dinámicamente las cabeceras de los problemas en la tabla
     function updateProblemHeaders(problemIds) {
         const tableHeadRow = document.querySelector("#rankingTable thead tr");
-        // Remove existing problem headers (keep Team, Points, Penalty)
-        let existingProblemHeaders = tableHeadRow.querySelectorAll('th:not(:first-child):not(:last-child):not(:nth-last-child(2))');
+        // Eliminar las cabeceras de problemas existentes (mantener Equipo, Puntos, Penalización)
+        // Seleccionar todos los elementos th que no son el primero, ni los dos últimos
+        let existingProblemHeaders = tableHeadRow.querySelectorAll('th:not(:first-child):not(:nth-last-child(2)):not(:last-child)');
         existingProblemHeaders.forEach(th => th.remove());
 
-        // Insert new problem headers before 'Puntos'
-        const pointsHeader = tableHeadRow.querySelector('th:nth-last-child(2)'); // Get the 'Puntos' header
+        // Insertar nuevas cabeceras de problemas antes de 'Puntos'
+        const pointsHeader = tableHeadRow.querySelector('th:nth-last-child(2)'); // Obtener la cabecera 'Puntos'
         problemIds.forEach(pId => {
             const th = document.createElement('th');
-            th.textContent = `P${pId}`; // E.g., PA, PB, PC
+            th.textContent = `P${pId}`; // Ej. PA, PB, PC
             tableHeadRow.insertBefore(th, pointsHeader);
         });
     }
 
-
-    // Updated updateRankingTable function with class additions for styling
+    // Función para actualizar la tabla de posiciones con clases para estilos
     function updateRankingTable(data) {
         const tbody = document.querySelector("#rankingTable tbody");
-        tbody.innerHTML = ""; // Clear existing rows
+        tbody.innerHTML = ""; // Limpiar filas existentes
 
-        // Ensure problem headers are up-to-date if data contains problem_ids
+        // Asegurarse de que las cabeceras de problemas estén actualizadas si los datos contienen problem_ids
+        // Esto asume que los problem_ids son consistentes en todas las actualizaciones de ranking
         if (data.length > 0 && data[0].status) {
             const problem_ids_from_data = Object.keys(data[0].status).sort();
             updateProblemHeaders(problem_ids_from_data);
+        } else if (Object.keys(problemasData).length > 0) {
+            // Si no hay datos de ranking aún, pero los problemas están cargados, usar las claves de problemasData
+            updateProblemHeaders(Object.keys(problemasData).sort());
         }
-
 
         data.forEach(part => {
           const row = document.createElement("tr");
-          // Map problem statuses to table cells with specific classes
-          const problemStatusCells = Object.keys(problemasData).map(pId => { // Use problemasData keys for consistent order
-              const status = part.status[pId] || ""; // Get status, default to empty string if not found
+          // Mapear los estados de los problemas a celdas de tabla con clases específicas
+          const problemStatusCells = Object.keys(problemasData).map(pId => { // Usar las claves de problemasData para un orden consistente
+              const status = part.status[pId] || ""; // Obtener el estado, por defecto cadena vacía si no se encuentra
               let statusClass = '';
-              // Determine class based on status
+              // Determinar la clase basada en el estado
               switch (status.toLowerCase()) {
-                  case 'correcto':
+                  case '✔': // Asumiendo '✔' para correcto
                       statusClass = 'status-correct';
                       break;
-                  case 'incorrecto':
+                  case '✖': // Asumiendo '✖' para incorrecto
                       statusClass = 'status-incorrect';
                       break;
-                  case 'pendiente':
-                      statusClass = 'status-pending';
-                      break;
-                  case '': // For problems not attempted or status not yet set
+                  case '': // Para problemas no intentados o estado aún no establecido
                       statusClass = 'status-not-attempted';
                       break;
                   default:
                       statusClass = ''; // Fallback
               }
-              return `<td class="${statusClass}">${status}</td>`; // Add the class to the td
+              return `<td class="${statusClass}">${status}</td>`; // Añadir la clase al td
           }).join("");
 
           row.innerHTML = `<td>${part.name}</td>${problemStatusCells}<td>${part.score}</td><td>${part.penalty}</td>`;
           tbody.appendChild(row);
         });
     }
-
   </script>
 
 </body>

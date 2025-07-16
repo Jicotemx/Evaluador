@@ -391,7 +391,6 @@ def submit():
 
     pid = request.form["problem"].strip()
     answer = request.form["answer"].strip()
-    logging.info(f"Problems actual: {problems}") 
     if name not in participants:
         # Esto no debería ocurrir si el check_login funciona, pero es una buena salvaguarda
         return jsonify({"error": "Participante no registrado"}), 400
@@ -426,6 +425,7 @@ def get_ranking_data():
     data.sort(key=lambda x: (-x["score"], x["penalty"]))
     data.sort(key=lambda x: (-x["score"], x["penalty"]))
     logging.info(f"Ranking data generated: {data}") # <-- Add this
+    logging.info(f"Problems actual: {problems}") 
     return data
 
 @app.route("/ranking")

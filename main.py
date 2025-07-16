@@ -423,6 +423,8 @@ def get_ranking_data():
         } for p in participants.values()
     ]
     data.sort(key=lambda x: (-x["score"], x["penalty"]))
+    data.sort(key=lambda x: (-x["score"], x["penalty"]))
+    logging.info(f"Ranking data generated: {data}") # <-- Add this
     return data
 
 @app.route("/ranking")

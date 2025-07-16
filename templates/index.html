@@ -241,17 +241,6 @@
         flex-direction: column;
       }
     }
-.result-accepted {
-    color: #155724;
-    background-color: #d4edda;
-    border: 1px solid #c3e6cb;
-}
-
-.result-rejected {
-    color: #721c24;
-    background-color: #f8d7da;
-    border: 1px solid #f5c6cb;
-}
   </style>
   <script>
     MathJax = {
@@ -348,6 +337,10 @@
         </thead>
         <tbody></tbody>
       </table>
+      
+      <div class="admin-link">
+        <p><a href="/admin">Ir a Panel de Administración</a></p>
+      </div>
     </div>
   </div>
 
@@ -580,9 +573,8 @@ document.getElementById("submitForm").onsubmit = e => {
     return response.json();
   })
   .then(data => {
-    const resultContainer = document.getElementById('resultContainer');
-    resultContainer.textContent = data.message;
-    resultContainer.className = `result-message result-${data.result_type}`;
+    submitMsgElem.textContent = data.message || data.error || "";
+    submitMsgElem.className = data.error ? 'message error' : 'message success'; // Añadir clase de éxito/error
     // Limpiar el campo de respuesta después de enviar
     document.getElementById("answerInput").value = '';
     // El ranking se actualizará vía socketio.on('ranking_update')

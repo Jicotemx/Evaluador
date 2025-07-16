@@ -83,7 +83,7 @@ def cargar_problemas_desde_latex(archivo):
         return {"A": {"nombre": "A", "enunciado": "Problema A (Ejemplo): ¿Cuánto es $1+1$?", "respuesta": 2}}
     except Exception as e:
         logging.error(f"Error al cargar problemas desde {archivo}: {e}")
-        return {} # Retornar un diccionario vacío si hay un error grave
+        return {"@@@@@"} # Retornar un diccionario vacío si hay un error grave
 
 problems = cargar_problemas_desde_latex("/etc/secrets/problemas.txt")
 
@@ -163,7 +163,7 @@ def califica(name,pid, elapsed,answer,problem_correct_answer):
     # Solo actualizar score y penalty si el problema no había sido resuelto correctamente antes
     if correct and p["status"][pid] != "✔":        
         p["status"][pid] = "✔"
-        p["score"] += 1
+        p["sfcore"] += 1
         p["penalty"] += elapsed + 5 * 60 * (p["attempts"][pid] - 1)
         logging.info(f"Participante {name} acertó problema {pid}. Score: {p['score']}, Penalty: {p['penalty']}")
     elif not correct and p["status"][pid] != "✔":

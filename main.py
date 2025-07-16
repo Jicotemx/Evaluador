@@ -379,7 +379,7 @@ def ejecutar_accion():
 
 @app.route("/submit", methods=["POST"])
 def submit():
-    logging.info(f"Problems actual: {problems}")
+    
     # Asegurarse de que el usuario esté logueado    
     if 'logged_in_user' not in session:
         return jsonify({"error": "No autorizado. Por favor inicie sesión."}), 401
@@ -391,7 +391,7 @@ def submit():
 
     pid = request.form["problem"].strip()
     answer = request.form["answer"].strip()
-
+    logging.info(f"Problems actual: {problems}") 
     if name not in participants:
         # Esto no debería ocurrir si el check_login funciona, pero es una buena salvaguarda
         return jsonify({"error": "Participante no registrado"}), 400

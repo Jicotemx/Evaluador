@@ -357,7 +357,7 @@
       <h2>Tiempo restante</h2>
       <div id="timer">Cargando...</div>
 
-      <div id="loginForm" class="form-group" style="display: block !important;">
+      <div id="loginForm" class="form-group" style="display: block;"> <!-- REMOVED !important from here. JS handles display. -->
         <h2>Ingresar / Registrar</h2>
         <label for="teamName">Nombre del equipo:</label>
         <input type="text" id="teamName" placeholder="Ej. Los Matematicos" required>
@@ -416,22 +416,32 @@
   </div>
 
   <script>
+    console.log('Script principal de index.html iniciado.'); // Log al inicio del script
+
     const socket = io();
     let problemasData = {};
-    let currentProblemId = null; // Para controlar si el enunciado ha cambiado
-    let currentEnunciadoHtml = null; // Para evitar re-renderizados innecesarios de MathJax
+    let currentProblemId = null;
+    let currentEnunciadoHtml = null;
 
-    let timerInterval; // Para almacenar el ID del intervalo del temporizador
-    let timerFinished = false; // Bandera para detener el intervalo si el temporizador ha terminado
-    let START_TIME_SERVER; // Se establecerá desde el servidor en la carga inicial o actualización de configuración
-    let DURATION_MINUTES; // Se establecerá desde el servidor
-
-    // Configuración de MathJax (movida al head para una carga más temprana)
-    // Ya está en el <head> de la plantilla HTML.
+    let timerInterval;
+    let timerFinished = false;
+    let START_TIME_SERVER;
+    let DURATION_MINUTES;
 
     document.addEventListener('DOMContentLoaded', () => {
         console.log('DOM Content Loaded. Iniciando carga de datos iniciales...');
-        // Cargar problemas iniciales desde el backend
+
+        // La visibilidad inicial del formulario de login se maneja en checkLoginStatus
+        // Asegurarse de que el formulario de login esté visible por defecto, si no hay JS que lo cambie inmediatamente
+        // (Aunque checkLoginStatus lo ajustará, esto da una base)
+        document.getElementById('loginForm').style.display = 'block';
+        document.getElementById('problemSelectionAndSubmission').style.display = 'none';
+
+
+        // Ahora, proceder con operaciones asíncronas
+        checkLoginStatus(); // Esto determinará qué formulario mostrar finalmente
+
+        // Cargar problemas y ranking en paralelo, pero sin bloquear la visualización
         fetch('/get_problems')
             .then(response => {
                 console.log('Respuesta de /get_problems:', response);
@@ -454,7 +464,6 @@
                 displayMessage('submissionMessage', 'Error al cargar problemas. Recarga la página.', 'error');
             });
 
-        // Cargar ranking inicial desde el backend
         fetch('/get_ranking')
             .then(response => {
                 console.log('Respuesta de /get_ranking:', response);
@@ -466,21 +475,18 @@
             .then(data => {
                 console.log('Datos de ranking recibidos:', data);
                 updateRankingTable(data.ranking);
-                updateProblemHeaders(data.problem_ids); // Actualizar cabeceras de problemas
+                updateProblemHeaders(data.problem_ids);
             })
             .catch(error => {
                 console.error('Error al cargar ranking:', error);
                 displayMessage('rankingMessage', 'Error al cargar ranking. Recarga la página.', 'error');
             });
-
-        // Verificar el estado de la sesión y obtener datos iniciales del concurso (incluido el tiempo)
-        checkLoginStatus();
     });
 
     // Manejar actualizaciones del ranking desde el servidor vía Socket.IO
     socket.on('ranking_update', (data) => {
         console.log("Ranking actualizado recibido vía socket:", data);
-        updateRankingTable(data); // Llamar a la función para actualizar la tabla
+        updateRankingTable(data);
     });
 
     // Manejar actualizaciones de configuración (como START_TIME o DURATION) desde el servidor
@@ -489,7 +495,7 @@
         if (data.type === 'time') {
             START_TIME_SERVER = new Date(data.startTime);
             DURATION_MINUTES = data.durationMinutes;
-            updateTimerDisplay(); // Actualizar el temporizador inmediatamente
+            updateTimerDisplay();
             if (timerFinished && !timerInterval) {
                 timerInterval = setInterval(updateTimerDisplay, 1000);
             }
@@ -499,7 +505,7 @@
             if (document.getElementById('problemSelect').value) {
                 showProblemEnunciado(document.getElementById('problemSelect').value);
             }
-            fetch('/get_ranking') // Re-fetch ranking to update table with new problem columns
+            fetch('/get_ranking')
                 .then(response => response.json())
                 .then(data => {
                     updateRankingTable(data.ranking);
@@ -521,6 +527,7 @@
 
     async function checkLoginStatus() {
         console.log('Iniciando checkLoginStatus...');
+        console.log('Intentando fetch a /check_login_status...');
         try {
             const response = await fetch('/check_login_status');
             console.log('Respuesta de /check_login_status:', response);
@@ -551,7 +558,7 @@
             }
 
         } catch (error) {
-            console.error('Error al verificar el estado de la sesión:', error);
+            console.error('Error al verificar el estado de la sesión (catch block):', error);
             displayMessage('loginMessage', 'Error al verificar estado de sesión. Intenta recargar la página.', 'error');
             // Asegurarse de que el formulario de login esté visible en caso de error
             document.getElementById('loginForm').style.display = 'block';
@@ -607,6 +614,7 @@
     }
 
     async function login() {
+        console.log('Función login() llamada.'); // Nuevo log
         const teamName = document.getElementById('teamName').value;
         const teamPassword = document.getElementById('teamPassword').value;
         try {
@@ -631,6 +639,7 @@
     }
 
     async function register() {
+        console.log('Función register() llamada.'); // Nuevo log
         const teamName = document.getElementById('teamName').value;
         const teamPassword = document.getElementById('teamPassword').value;
         try {
@@ -652,6 +661,7 @@
     }
 
     async function logout() {
+        console.log('Función logout() llamada.'); // Nuevo log
         try {
             const response = await fetch('/logout', {
                 method: 'POST'
@@ -722,6 +732,7 @@
     }
 
     async function submitAnswer() {
+        console.log('Función submitAnswer() llamada.'); // Nuevo log
         if (timerFinished) {
             displayMessage('submissionMessage', 'El tiempo ha terminado. No se pueden enviar más respuestas.', 'error');
             return;

@@ -98,13 +98,8 @@ def get_status():
     if now < START_TIME:
         return "before"
     elif now > end_time:
-        # Esto asegura que el envío solo ocurra una vez al finalizar.
-        # Podrías querer que un admin lo fuerce manualmente después.
         if not informe_subido:
-            # Asegúrate de no llamar a enviar_resultado aquí si es una ruta Flask
-            # La ruta /enviar_resultado puede ser llamada por un admin o un proceso cron
-            # Aquí solo cambiamos el estado y la bandera.
-            pass # La bandera de informe_subido se controla en la función enviar_resultado por la ruta
+            pass
         return "after"
     return "running"
 
@@ -145,6 +140,7 @@ def generar_historial_csv(historial):
             logging.warning(f"Entrada de historial con formato incorrecto, saltando: {entrada}")
 
     return output.getvalue()
+
 def califica(name,pid, elapsed,answer,problem_correct_answer):
     p = participants[name]
     correct = False
@@ -171,6 +167,7 @@ def califica(name,pid, elapsed,answer,problem_correct_answer):
         p["status"][pid] = "✖"
         logging.info(f"Participante {name} falló problema {pid}. Intento {p['attempts'][pid]}.")   
     return estado    
+
 def reevaluar_todos():
     """
     Reevalúa todos los envíos históricos para recalcular los scores y penalizaciones
@@ -204,7 +201,7 @@ def reevaluar_todos():
             
             historial_envios.append([name, pid, answer, estado, p["attempts"][pid], timestamp])    
     logging.info("Reevaluación completada.")
-    socketio.emit('ranking_update', get_ranking_data())
+    socketio.emit('ranking_update', get_ranking_data()['ranking']) # Emitir solo el ranking
     return jsonify({"message": "Reevaluación completada correctamente"})
     
 # =====================
@@ -213,61 +210,86 @@ def reevaluar_todos():
 
 @app.route("/login", methods=["POST"])
 def login():
-    name = request.form["name"].strip()
-    password = request.form["password"].strip()
+    data = request.get_json() # Get JSON data
+    name = data.get("team_name", "").strip()
+    password = data.get("password", "").strip()
 
-    # Esto es una validación extremadamente básica y NO SEGURA para producción.
-    # En un entorno real, usarías una base de datos y un hash de la contraseña.
-    # Aquí, simplemente registramos al participante si no existe.
     if name not in participants:
-        # Para simplificar, la contraseña es el nombre por ahora.
-        # Idealmente, deberías almacenar un hash de la contraseña real aquí.
-        participants[name] = {
-            "name": name,
-            "password": password, # NO HACER ESTO EN PRODUCCIÓN
-            "status": {pid: "" for pid in problems},
-            "attempts": {pid: 0 for pid in problems},
-            "score": 0,
-            "penalty": 0
-        }
-        logging.info(f"Nuevo participante registrado: {name}")
+        return jsonify({"success": False, "message": "Equipo no registrado."}), 401
     
-    # Validar que la contraseña coincida con la registrada (si existe)
     if participants[name]["password"] != password:
-        return jsonify({"error": "Contraseña incorrecta."}), 401
+        return jsonify({"success": False, "message": "Contraseña incorrecta."}), 401
 
-    session['logged_in_user'] = name # Guardar el nombre del usuario en la sesión
+    session['logged_in_user'] = name
     logging.info(f"Participante '{name}' ha iniciado sesión.")
-    return jsonify({"message": "Login exitoso"})
+    return jsonify({"success": True, "message": "Login exitoso"})
+
+@app.route("/register", methods=["POST"])
+def register():
+    data = request.get_json() # Get JSON data
+    name = data.get("team_name", "").strip()
+    password = data.get("password", "").strip()
+
+    if not name or not password:
+        return jsonify({"success": False, "message": "Nombre de equipo o contraseña no pueden estar vacíos."}), 400
+
+    if name in participants:
+        return jsonify({"success": False, "message": "El equipo ya está registrado."}), 409 # Conflict
+
+    participants[name] = {
+        "name": name,
+        "password": password, # NO HACER ESTO EN PRODUCCIÓN
+        "status": {pid: "" for pid in problems},
+        "attempts": {pid: 0 for pid in problems},
+        "score": 0,
+        "penalty": 0
+    }
+    logging.info(f"Nuevo participante registrado: {name}")
+    return jsonify({"success": True, "message": "Registro exitoso. Ya puedes iniciar sesión."})
+
 
 # RUTA PARA CERRAR SESIÓN
 @app.route("/logout", methods=["POST"])
 def logout():
     session.pop('logged_in_user', None) # Eliminar el usuario de la sesión
     logging.info("Usuario ha cerrado sesión.")
-    return jsonify({"message": "Cierre de sesión exitoso."})
+    return jsonify({"success": True, "message": "Cierre de sesión exitoso."})
+
+# Nueva ruta para verificar el estado de la sesión y obtener datos iniciales del concurso
+@app.route("/check_login_status")
+def check_login_status():
+    logged_in = 'logged_in_user' in session
+    team_name = session.get('logged_in_user', None)
+    
+    return jsonify({
+        "logged_in": logged_in,
+        "team_name": team_name,
+        "start_time": START_TIME.isoformat(),
+        "duration_minutes": int(DURATION.total_seconds() / 60)
+    })
+
+# Nueva ruta para obtener los problemas (para poblar el select en el frontend)
+@app.route("/get_problems")
+def get_problems():
+    # Solo enviamos el enunciado, no la respuesta correcta
+    return jsonify({pid: {"enunciado": data["enunciado"]} for pid, data in problems.items()})
+
 
 @app.before_request
 def check_login():
-    # Permitir acceso a la página de login y a los recursos estáticos sin estar logueado
-    if request.endpoint in ['login', 'static', 'index']:
+    # Permitir acceso a la página de login, recursos estáticos, y las nuevas rutas de API
+    if request.endpoint in ['login', 'register', 'logout', 'check_login_status', 'get_problems', 'get_ranking', 'static', 'index', 'admin_panel']:
         return # Permite el acceso
     
-    # Si no hay usuario en sesión y no es una de las rutas permitidas, redirigir o denegar
+    # Si no hay usuario en sesión y no es una de las rutas permitidas, denegar acceso a rutas protegidas
     if 'logged_in_user' not in session:
-        # Para API calls, retornar un error JSON; para rutas HTML, redirigir al login
-        if request.path.startswith('/submit') or request.path.startswith('/ranking'):
-            return jsonify({"error": "No autorizado. Por favor inicie sesión."}), 401
-        # Para la ruta principal si el usuario no está logueado, redirigir al login (manejar esto en JS)
-        # Esto es más relevante si index() no incluye el formulario de login.
-        # Como index.html maneja el login/mainDiv, no necesitamos una redirección de Flask aquí.
+        if request.path.startswith('/submit'):
+            return jsonify({"success": False, "message": "No autorizado. Por favor inicie sesión."}), 401
         pass # El frontend JS se encarga de mostrar el loginDiv
 
 @app.route("/admin")
 def admin_panel():
     """Ruta para servir el panel de administración."""
-    # En un entorno real, esta página también debería requerir autenticación de admin
-    # antes de ser servida, no solo para las acciones POST.
     return render_template("admin.html")
 
 
@@ -304,8 +326,9 @@ def ejecutar_accion():
                 cambios_realizados = True
                 
                 socketio.emit('config_update', {
-                    'type': 'start_time',
-                    'value': START_TIME.isoformat()
+                    'type': 'time', # Changed type to 'time'
+                    'startTime': START_TIME.isoformat(),
+                    'durationMinutes': int(DURATION.total_seconds() / 60)
                 }, to='*')
                 logging.info(f"Hora de inicio cambiada a: {START_TIME}")
             except ValueError as e:
@@ -328,8 +351,9 @@ def ejecutar_accion():
                 cambios_realizados = True
                 
                 socketio.emit('config_update', {
-                    'type': 'duration',
-                    'value': int(DURATION.total_seconds())
+                    'type': 'time', # Changed type to 'time'
+                    'startTime': START_TIME.isoformat(),
+                    'durationMinutes': int(DURATION.total_seconds() / 60)
                 }, to='*')
                 logging.info(f"Duración cambiada a: {DURATION}")
             except ValueError as e:
@@ -360,7 +384,7 @@ def ejecutar_accion():
             # Emitir la actualización de problemas (normalmente implica una recarga de página)
             socketio.emit('config_update', {
                 'type': 'problems',
-                'value': {k: {'enunciado': v['enunciado'], 'respuesta': str(v['respuesta'])} for k, v in problems.items()}
+                'value': {k: {'enunciado': v['enunciado']} for k, v in problems.items()} # Only send enunciados
             }, to='*')
             socketio.emit('force_reload', {}, to='*') # Forzar recarga para el frontend
             
@@ -381,22 +405,22 @@ def ejecutar_accion():
 def submit():
     # Asegurarse de que el usuario esté logueado
     if 'logged_in_user' not in session:
-        return jsonify({"error": "No autorizado. Por favor inicie sesión."}), 401
+        return jsonify({"success": False, "message": "No autorizado. Por favor inicie sesión."}), 401
     
     name = session['logged_in_user'] # Usar el nombre de la sesión para seguridad
     
     if get_status() != "running":
-        return jsonify({"error": "Concurso no activo"}), 403
+        return jsonify({"success": False, "message": "Concurso no activo"}), 403
 
-    pid = request.form["problem"].strip()
-    answer = request.form["answer"].strip()
+    data = request.get_json() # Get JSON data
+    pid = data.get("problem_id", "").strip()
+    answer = data.get("answer", "").strip()
 
     if name not in participants:
-        # Esto no debería ocurrir si el check_login funciona, pero es una buena salvaguarda
-        return jsonify({"error": "Participante no registrado"}), 400
+        return jsonify({"success": False, "message": "Participante no registrado"}), 400
 
     if pid not in problems:
-        return jsonify({"error": "Problema no válido"}), 400
+        return jsonify({"success": False, "message": "Problema no válido"}), 400
 
     p = participants[name]
     p["attempts"][pid] = p["attempts"].get(pid, 0) + 1 # Inicializar si no existe
@@ -409,10 +433,8 @@ def submit():
     historial_envios.append([name, pid, answer, estado, p["attempts"][pid], int(get_elapsed_time())])
     
     # Emitir actualización a todos los clientes
-    socketio.emit('ranking_update', get_ranking_data())
-    estado_texto = "ACEPTADA" if estado == "✔" else "RECHAZADA"
-    mensaje = f"Resultado del envío  del problema {pid}: {estado}"
-    return jsonify({"message": mensaje,"status": estado})
+    socketio.emit('ranking_update', get_ranking_data()['ranking']) # Emitir solo el ranking
+    return jsonify({"success": True, "message": "Respuesta registrada", "status": estado})
 
 def get_ranking_data():
     """Helper para obtener los datos del ranking de forma consistente."""
@@ -425,36 +447,25 @@ def get_ranking_data():
         } for p in participants.values()
     ]
     data.sort(key=lambda x: (-x["score"], x["penalty"]))
-    return data
+    
+    # Get problem IDs for table headers
+    problem_ids = list(problems.keys())
+    
+    return {"ranking": data, "problem_ids": problem_ids}
 
-@app.route("/ranking")
-def ranking():
-    # El frontend lo pide continuamente, no necesita login para verlo.
+@app.route("/get_ranking") # Renamed from /ranking to /get_ranking for clarity
+def get_ranking():
     return jsonify(get_ranking_data())
 
 @app.route("/")
 def index():
-    # Si el usuario ya está logueado, podríamos pasar su nombre a la plantilla
-    # para que el JS lo ponga directamente en submitName.
-    logged_in_user = session.get('logged_in_user', None)
-    return render_template(
-        "index.html",
-        status=get_status(),
-        start_time_iso=START_TIME.isoformat(),
-        duration=int(DURATION.total_seconds()),
-        problems=problems,
-        logged_in_user=logged_in_user # Pasar el usuario logueado
-    )
+    return render_template("index.html")
 
 @app.route('/enviar_resultado')
 def enviar_resultado_route():
     global informe_subido
     now = datetime.now(LOCAL_TIMEZONE)
     end_time = START_TIME + DURATION
-    
-    # Esta ruta debería ser idealmente protegida por autenticación de administrador
-    # o activada por un proceso en background, no por una simple solicitud GET.
-    # Aquí, simplemente la protegemos por el estado del concurso.
     
     if now < end_time:
         return "El concurso aún no ha terminado", 403 # Cambiado a 403 para indicar prohibido
@@ -505,3 +516,4 @@ if __name__ == "__main__":
         logging.critical("No se pudieron cargar los problemas. La aplicación puede no funcionar como se espera.")
 
     socketio.run(app, host="0.0.0.0", port=81, debug=True, use_reloader=False)
+

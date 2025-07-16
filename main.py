@@ -25,7 +25,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 # Hora de inicio por defecto (se puede cambiar desde admin)
 anno, mes, dia, hora, minuto = 2049, 12, 31, 23, 59
 LOCAL_TIMEZONE = pytz.timezone("America/Mexico_City")
-START_TIME = LOCAL_TIMEZONE.locaelize(datetime(year=anno, month=mes, day=dia, hour=hora, minute=minuto))
+START_TIME = LOCAL_TIMEZONE.localize(datetime(year=anno, month=mes, day=dia, hour=hora, minute=minuto))
 DURATION = timedelta(minutes=20)
 
 app = Flask(__name__)

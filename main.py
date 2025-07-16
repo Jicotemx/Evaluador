@@ -412,8 +412,7 @@ def submit():
     socketio.emit('ranking_update', get_ranking_data())
     estado_texto = "ACEPTADA" if estado == "✔" else "RECHAZADA"
     mensaje = f"Resultado del envío  del problema {pid}: {estado}"
-    return jsonify({"message": mensaje, "status": estado,
-                    "result_type": "accepted" if estado == "✔" else "rejected"  # Indicador semántico})
+    return jsonify({"message": mensaje,"status": estado,"result_type":"accepted" if estado == "✔" else "rejected"})
 
 def get_ranking_data():
     """Helper para obtener los datos del ranking de forma consistente."""

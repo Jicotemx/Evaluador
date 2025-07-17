@@ -155,8 +155,16 @@ def califica(name,pid, elapsed,answer,problem_correct_answer):
         correct_val = float(problem_correct_answer)
         correct = abs(submitted_val - correct_val) < 1e-6
     except ValueError:
-        # Si no son numéricas o la conversión falla, compara como cadenas
-        correct = answer.lower() == str(problem_correct_answer).lower() # Comparación insensible a mayúsculas
+        partes = answer.split('/')
+        if len(partes) == 2:
+        try:
+            a = int(partes[0])
+            b = int(partes[1])
+            correct_val = float(problem_correct_answer)
+            correct = abs(a/b - correct_val) < 1e-6
+        except ValueError:
+           # Si no son numéricas o la conversión falla, compara como cadenas
+           correct = answer.lower() == str(problem_correct_answer).lower() # Comparación insensible a mayúsculas
 
     estado = "✔" if correct else "✖"
     

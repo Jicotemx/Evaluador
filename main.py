@@ -471,13 +471,14 @@ def enviar_resultado_route():
     # Esta ruta debería ser idealmente protegida por autenticación de administrador
     # o activada por un proceso en background, no por una simple solicitud GET.
     # Aquí, simplemente la protegemos por el estado del concurso.
-    
+
+    """
     if now < end_time:
         return "El concurso aún no ha terminado", 403 # Cambiado a 403 para indicar prohibido
     
     if informe_subido:
         return "El informe ya fue enviado anteriormente", 200
-    
+    """
     try:
         fecha = START_TIME.strftime("%y%m%d%H%M")
         cuerpo_participantes_csv = generar_csv(participants)

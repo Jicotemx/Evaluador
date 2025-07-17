@@ -44,7 +44,6 @@
       margin-bottom: var(--espaciado);
     }
 
-   
     .card:hover {
       transform: translateY(-5px); /* Un ligero levantamiento es más común */
       transition: transform 0.3s ease-in-out; /* Transición suave */
@@ -207,7 +206,7 @@
     }
 
     .author-logo:hover {
-      transform: scale(0.1); 
+      transform: scale(1.2); /* Corrección: de 0.1 a 1.2 (aumenta tamaño) para ser más visible */
       opacity: 1;
     }
 
@@ -219,6 +218,86 @@
     }
   </style>
 </head>
+<body>
+  <div class="container">
+    <div class="logo">🧮</div>
+    <h1>Zin'achi</h1>
+
+    <div id="loginDiv" class="card">
+      <h2>Acceso al Sistema</h2>
+      <div class="form-group">
+        <label for="loginName">Nombre de usuario:</label>
+        <input type="text" id="loginName" placeholder="Ingresa tu nombre">
+      </div>
+
+      <div class="form-group">
+        <label for="loginPassword">Contraseña:</label>
+        <input type="password" id="loginPassword" placeholder="Ingresa tu contraseña">
+      </div>
+
+      <button onclick="login()">Entrar al sistema</button>
+      <div id="loginMsg" class="message" aria-live="polite"></div>
+
+      <hr style="margin: 20px 0; border-color: #eee;">
+
+      <div class="admin-link">
+        <p>¿Eres administrador? <a href="/admin">Acceder al Panel de Administración</a></p>
+      </div>
+    </div>
+
+    <div id="mainDiv" class="card" style="display:none">
+      <button id="logoutButton" class="logout-btn">Salir del sistema</button>
+
+      <div class="flex-container">
+        <div id="statusMsg" class="status-box running" aria-live="polite" style="font-weight: bold;">Concurso en curso</div>
+        <div id="timer" class="timer" style="font-weight:bold">⏱️ Transcurrido: 00:00:00 | ⌛ Faltan: 02:00:00</div>
+      </div>
+
+      <form id="submitForm">
+        <div class="form-group">
+          <label for="submitName">Nombre:</label>
+          <input type="text" id="submitName" readonly>
+        </div>
+
+        <div class="form-group">
+          <label for="problemSelect">Problema:</label>
+          <select id="problemSelect" required onchange="mostrarEnunciado()">
+            {% for pid in problems %}<option value="{{ pid }}">{{ pid }}</option>{% endfor %}
+          </select>
+        </div>
+
+        <div id="enunciado" class="form-group" style="margin:1em 0; padding: 20px; background: #f8f9fa; border-radius: 8px; font-size:18px;">
+          <em>El concurso aún no ha comenzado.</em>
+        </div>
+
+        <div class="form-group">
+          <label for="answerInput">Respuesta:</label>
+          <input type="text" id="answerInput" required placeholder="Ingresa tu respuesta" pattern="[-+]?\d*\.?\d+" title="Ingrese un valor numérico">
+        </div>
+
+        <button type="submit">Enviar respuesta</button>
+        <div id="submitMsg" class="message" aria-live="polite"></div>
+      </form>
+
+      <h3>Tabla de posiciones</h3>
+      <table id="rankingTable">
+        <thead>
+          <tr>
+            <th>Participante</th>
+            {% for pid in problems %}<th>{{ pid }}</th>{% endfor %}
+            <th>Puntos</th>
+            <th>Penalización</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="author-logo">
+    <img src="{{ url_for('static', filename='JA.png') }}" alt="Logo del autor">
+  </div>
+
   <script>
     MathJax = {
       tex: {
@@ -237,505 +316,326 @@
       }
     };
   </script>
-  
+
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
-</head>
-<body>
-  <div class="container">
-    <div class="logo">🧮</div>
-    <h1>Zin'achi</h1>
-    
-    <div id="loginDiv" class="card">
-      <h2>Acceso al Sistema</h2>
-      <div class="form-group">
-        <label for="loginName">Nombre de usuario:</label>
-        <input type="text" id="loginName" placeholder="Ingresa tu nombre">
-      </div>
-      
-      <div class="form-group">
-        <label for="loginPassword">Contraseña:</label>
-        <input type="password" id="loginPassword" placeholder="Ingresa tu contraseña">
-      </div>
-      
-      <button onclick="login()">Entrar al sistema</button>
-      <div id="loginMsg" class="message" aria-live="polite"></div>
-      
-      <hr style="margin: 20px 0; border-color: #eee;">
-      
-      <div class="admin-link">
-        <p>¿Eres administrador? <a href="/admin">Acceder al Panel de Administración</a></p> 
-      </div>
-    </div>
 
-    <div id="mainDiv" class="card" style="display:none">
-      <button id="logoutButton" class="logout-btn">Salir del sistema</button>
-      
-      <div class="flex-container">
-        <div id="statusMsg" class="status-box running" aria-live="polite" style="font-weight: bold;">Concurso en curso</div>
-        <div id="timer" class="timer" style="font-weight:bold">⏱️ Transcurrido: 00:00:00 | ⌛ Faltan: 02:00:00</div>
-      </div>
-
-      <form id="submitForm">   
-        <div class="form-group">
-          <label for="submitName">Nombre:</label>
-          <input type="text" id="submitName" readonly>
-        </div>
-        
-        <div class="form-group">
-          <label for="problemSelect">Problema:</label>
-          <select id="problemSelect" required onchange="mostrarEnunciado()">
-            {% for pid in problems %}<option value="{{ pid }}">{{ pid }}</option>{% endfor %}
-          </select>
-        </div>
-
-        <div id="enunciado" class="form-group" style="margin:1em 0; padding: 20px; background: #f8f9fa; border-radius: 8px; font-size:18px;">
-          <em>El concurso aún no ha comenzado.</em>
-        </div>
-
-        <div class="form-group">
-          <label for="answerInput">Respuesta:</label>
-          <input type="text" id="answerInput" required placeholder="Ingresa tu respuesta" pattern="[-+]?\d*\.?\d+" title="Ingrese un valor numérico">
-        </div>
-        
-        <button type="submit">Enviar respuesta</button>
-        <div id="submitMsg" class="message" aria-live="polite"></div>
-      </form>
-
-      <h3>Tabla de posiciones</h3>
-      <table id="rankingTable">
-        <thead>
-          <tr>
-            <th>Participante</th>
-            {% for pid in problems %}<th>{{ pid }}</th>{% endfor %}
-            <th>Puntos</th>
-            <th>Penalización</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-  </div>
-
-  
- <script>
-    MathJax = {
-      tex: {
-        inlineMath: [['$','$'], ['\\(','\\)']],
-        displayMath: [['$$','$$'], ['\\[','\\]']],
-        processEscapes: true,
-        packages: {'[+]': ['ams']}
-      },
-      loader: { load: ['[tex]/ams'] },
-      startup: {
-        pageReady: () => {
-          return MathJax.startup.defaultPageReady().then(() => {
-            console.log('MathJax listo');
-          });
-        }
-      }
+  <script>
+    // Datos de problemas inyectados desde Flask
+    const problemasData = {
+      {% for pid, data in problems.items() %}
+        "{{ pid }}": {
+          "enunciado": {{ data.enunciado | tojson }},
+          "respuesta": {{ data.respuesta | tojson }}
+        },
+      {% endfor %}
     };
-  </script>
-  
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
-</head>
-<body>
-  </div> <!-- Cierre del container -->
-<div class="author-logo">
-  <img src="{{ url_for('static', filename='JA.png') }}" alt="Logo del autor">
-</div>
 
-  <div class="container">
-    <div class="logo">🧮</div>
-    <h1>Zin'achi</h1>
-    
-    <div id="loginDiv" class="card">
-      <h2>Acceso al Sistema</h2>
-      <div class="form-group">
-        <label for="loginName">Nombre de usuario:</label>
-        <input type="text" id="loginName" placeholder="Ingresa tu nombre">
-      </div>
-      
-      <div class="form-group">
-        <label for="loginPassword">Contraseña:</label>
-        <input type="password" id="loginPassword" placeholder="Ingresa tu contraseña">
-      </div>
-      
-      <button onclick="login()">Entrar al sistema</button>
-      <div id="loginMsg" class="message" aria-live="polite"></div>
-      
-      <hr style="margin: 20px 0; border-color: #eee;">
-      
-      <div class="admin-link">
-        <p>¿Eres administrador? <a href="/admin">Acceder al Panel de Administración</a></p> 
-      </div>
-    </div>
+    let startTime = new Date("{{ start_time_iso }}");
+    let durationSeconds = {{ duration }}; // 'let' para permitir cambios desde el socket
+    let concursoStatus = "{{ status }}"; // Estado inicial del concurso
 
-    <div id="mainDiv" class="card" style="display:none">
-      <button id="logoutButton" class="logout-btn">Salir del sistema</button>
-      
-      <div class="flex-container">
-        <div id="statusMsg" class="status-box running" aria-live="polite" style="font-weight: bold;">Concurso en curso</div>
-        <div id="timer" class="timer" style="font-weight:bold">⏱️ Transcurrido: 00:00:00 | ⌛ Faltan: 02:00:00</div>
-      </div>
+    // Variables para controlar la renderización de MathJax y el enunciado
+    let currentProblemId = null;
+    let currentEnunciadoHtml = null; // Para evitar re-renderizado innecesario de MathJax
 
-      <form id="submitForm">   
-        <div class="form-group">
-          <label for="submitName">Nombre:</label>
-          <input type="text" id="submitName" readonly>
-        </div>
-        
-        <div class="form-group">
-          <label for="problemSelect">Problema:</label>
-          <select id="problemSelect" required onchange="mostrarEnunciado()">
-            {% for pid in problems %}<option value="{{ pid }}">{{ pid }}</option>{% endfor %}
-          </select>
-        </div>
+    // Inicializar Socket.IO
+    const socket = io();
 
-       
-        <div class="form-group">
-          <label for="answerInput">Respuesta:</label>
-          <input type="text" id="answerInput" required placeholder="Ingresa tu respuesta" pattern="[-+]?\d*\.?\d+" title="Ingrese un valor numérico">
-        </div>
-        
-        <button type="submit">Enviar respuesta</button>
-        <div id="submitMsg" class="message" aria-live="polite"></div>
-      </form>
-
-      <h3>Tabla de posiciones</h3>
-      <table id="rankingTable">
-        <thead>
-          <tr>
-            <th>Participante</th>
-            {% for pid in problems %}<th>{{ pid }}</th>{% endfor %}
-            <th>Puntos</th>
-            <th>Penalización</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-      
-     
-    </div>
-  </div>
-
-<script>
-// Datos de problemas inyectados desde Flask
-const problemasData = {
-  {% for pid, data in problems.items() %}
-    "{{ pid }}": {
-      "enunciado": {{ data.enunciado | tojson }},
-      "respuesta": {{ data.respuesta | tojson }}
-    },
-  {% endfor %}
-};
-
-let startTime = new Date("{{ start_time_iso }}");
-let durationSeconds = {{ duration }}; // 'let' para permitir cambios desde el socket
-let concursoStatus = "{{ status }}"; // Estado inicial del concurso
-
-// Variables para controlar la renderización de MathJax y el enunciado
-let currentProblemId = null;
-let currentEnunciadoHtml = null; // Para evitar re-renderizado innecesario de MathJax
-
-// Inicializar Socket.IO
-const socket = io();
-
-// Manejar recarga forzada
-socket.on('force_reload', () => {
-    console.log("Recarga forzada solicitada por el servidor");
-    location.reload();
-});
-
-// Manejar actualizaciones de configuración desde el servidor
-socket.on('config_update', (data) => {
-    console.log("Configuración actualizada recibida:", data);
-    if (data.type === 'start_time') {
-        startTime = new Date(data.value);
-        updateTimer(); // Actualiza el timer inmediatamente
-    } else if (data.type === 'duration') {
-        durationSeconds = data.value;
-        updateTimer(); // Actualiza el timer inmediatamente
-    } else if (data.type === 'problems') {
-        // Para cambios de problemas, lo más simple es recargar la página.
-        // Una actualización dinámica sería mucho más compleja.
+    // Manejar recarga forzada
+    socket.on('force_reload', () => {
+        console.log("Recarga forzada solicitada por el servidor");
         location.reload();
-    }
-});
-
-// Manejar actualizaciones del ranking desde el servidor
-socket.on('ranking_update', (data) => {
-    console.log("Ranking actualizado recibido via socket:", data);
-    updateRankingTable(data); // Llama a una función dedicada para actualizar la tabla
-});
-
-
-function login() {
-  const name = document.getElementById("loginName").value.trim();
-  const password = document.getElementById("loginPassword").value.trim();
-  const loginMsgElem = document.getElementById("loginMsg");
-
-  if (!name || !password) {
-    loginMsgElem.textContent = "Falta nombre o contraseña.";
-    loginMsgElem.className = 'message error';
-    return;
-  }
-
-  fetch("/login", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: `name=${encodeURIComponent(name)}&password=${encodeURIComponent(password)}`
-  })
-  .then(response => {
-    if (!response.ok) { // Manejar errores HTTP
-        return response.json().then(err => Promise.reject(err));
-    }
-    return response.json();
-  })
-  .then(data => {
-    if (data.error) {
-      loginMsgElem.textContent = data.error;
-      loginMsgElem.className = 'message error';
-    } else {
-      loginMsgElem.textContent = "¡Login exitoso!";
-      loginMsgElem.className = 'message success';
-      document.getElementById("loginDiv").style.display = "none";
-      document.getElementById("mainDiv").style.display = "block";
-      document.getElementById("submitName").value = name;
-      iniciarConcurso();
-    }
-  })
-  .catch(error => {
-    console.error("Error en el login:", error);
-    loginMsgElem.textContent = error.message || "Error al intentar iniciar sesión.";
-    loginMsgElem.className = 'message error';
-  });
-}
-
-// Función de logout
-function logout() {
-  fetch("/logout", {
-      method: "POST"
-  })
-  .then(response => response.json())
-  .then(data => {
-      if (data.message) {
-          document.getElementById("mainDiv").style.display = "none";
-          document.getElementById("loginDiv").style.display = "block";
-          document.getElementById("loginName").value = "";
-          document.getElementById("loginPassword").value = "";
-          document.getElementById("loginMsg").textContent = data.message;
-          document.getElementById("loginMsg").className = 'message success';
-      } else {
-          console.error("Error al cerrar sesión:", data.error);
-          document.getElementById("loginMsg").textContent = data.error || "Error al cerrar sesión.";
-          document.getElementById("loginMsg").className = 'message error';
-      }
-  })
-  .catch(error => {
-      console.error("Error de conexión al cerrar sesión:", error);
-      document.getElementById("loginMsg").textContent = "Error de conexión al cerrar sesión.";
-      document.getElementById("loginMsg").className = 'message error';
-  });
-}
-
-// Registrar evento de logout cuando el DOM esté cargado
-document.addEventListener("DOMContentLoaded", () => {
-  // Registrar logout si el botón existe
-  const logoutButton = document.getElementById("logoutButton");
-  if (logoutButton) {
-    logoutButton.addEventListener("click", logout);
-  }
-
-  // Si el usuario ya está logueado (por ejemplo, al recargar la página), muestra el mainDiv
-  if ("{{ logged_in_user }}" !== "None") { // Chequea la variable de Jinja
-      document.getElementById("loginDiv").style.display = "none";
-      document.getElementById("mainDiv").style.display = "block";
-      document.getElementById("submitName").value = "{{ logged_in_user }}";
-      iniciarConcurso();
-  } else {
-      mostrarEnunciado(); // Mostrar enunciado inicial (puede ser "antes del concurso")
-  }
-});
-
-function iniciarConcurso() {
-  updateTimer(); // Primera actualización del temporizador
-  loadRanking(); // Primera carga del ranking
-  mostrarEnunciado(); // Asegurarse de que el enunciado se muestre al iniciar
-
-  // Intervalo para actualizar el temporizador cada segundo
-  setInterval(updateTimer, 1000);
-  // Intervalo para cargar el ranking cada 10 segundos
-  setInterval(loadRanking, 10000);
-}
-
-// Función mejorada para actualizar el temporizador
-function updateTimer() {
-    const now = new Date();
-    const startTimeObj = new Date(startTime);
-    const endTime = new Date(startTimeObj.getTime() + durationSeconds * 1000);
-
-    const timerElem = document.getElementById("timer");
-    const form = document.getElementById("submitForm");
-    const answerInput = document.getElementById("answerInput");
-    const submitButton = form ? form.querySelector("button[type=submit]") : null;
-    const statusMsg = document.getElementById("statusMsg");
-
-    if (!timerElem || !form || !answerInput || !submitButton || !statusMsg) return;
-
-    let newConcursoStatus;
-    if (now < startTimeObj) {
-        newConcursoStatus = "before";
-        const diff = Math.floor((startTimeObj - now) / 1000);
-        timerElem.textContent = `Comienza en: ${secondsToHMS(diff)}`;
-        statusMsg.textContent = "El concurso comenzará pronto.";
-        statusMsg.className = 'status-box before';
-        answerInput.disabled = true;
-        submitButton.disabled = true;
-    } else if (now < endTime) {
-        newConcursoStatus = "running";
-        const elapsed = Math.floor((now - startTimeObj) / 1000);
-        const remaining = durationSeconds - elapsed;
-        timerElem.textContent = `⏱️ Transcurrido: ${secondsToHMS(elapsed)} | ⌛ Faltan: ${secondsToHMS(remaining)}`;
-        statusMsg.textContent = "Concurso en curso";
-        statusMsg.className = 'status-box running';
-        answerInput.disabled = false;
-        submitButton.disabled = false;
-    } else {
-        newConcursoStatus = "after";
-        timerElem.textContent = "Concurso finalizado.";
-        statusMsg.textContent = "Concurso finalizado.";
-        statusMsg.className = 'status-box after';
-        answerInput.disabled = true;
-        submitButton.disabled = true;
-    }
-
-    // Solo actualiza el estado si ha cambiado
-    if (newConcursoStatus !== window.concursoStatus) {
-        window.concursoStatus = newConcursoStatus;
-        mostrarEnunciado(); // Llama a mostrarEnunciado solo si el estado del concurso cambia
-    }
-}
-
-function secondsToHMS(s) {
-  const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
-  return `${h.toString().padStart(2,"0")}:${m.toString().padStart(2,"0")}:${sec.toString().padStart(2,"0")}`;
-}
-
-document.getElementById("submitForm").onsubmit = e => {
-  e.preventDefault();
-  const name = document.getElementById("submitName").value.trim();
-  const pid = document.getElementById("problemSelect").value;
-  const ans = document.getElementById("answerInput").value.trim();
-  const submitMsgElem = document.getElementById("submitMsg");
-
-  // Validación básica del lado del cliente para la respuesta
-  if (ans === "") {
-      submitMsgElem.textContent = "La respuesta no puede estar vacía.";
-      submitMsgElem.className = 'message error';
-      return;
-  }
-
-  fetch("/submit", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: `name=${encodeURIComponent(name)}&problem=${encodeURIComponent(pid)}&answer=${encodeURIComponent(ans)}`
-  })
-  .then(response => {
-    if (!response.ok) { // Manejar errores HTTP
-        return response.json().then(err => Promise.reject(err));
-    }
-    return response.json();
-  })
-  .then(data => {
-    submitMsgElem.textContent = data.message || data.error || "";
-    submitMsgElem.className = data.error ? 'message error' : 'message success'; // Añadir clase de éxito/error
-    // Limpiar el campo de respuesta después de enviar
-    document.getElementById("answerInput").value = '';
-    // El ranking se actualizará vía socketio.on('ranking_update')
-  })
-  .catch(error => {
-    console.error("Error al enviar respuesta:", error);
-    submitMsgElem.textContent = error.message || "Error al enviar la respuesta.";
-    submitMsgElem.className = 'message error';
-  });
-};
-
-function loadRanking() {
-  fetch("/ranking")
-  .then(response => {
-    if (!response.ok) { // Manejar errores HTTP
-        return response.json().then(err => Promise.reject(err));
-    }
-    return response.json();
-  })
-  .then(data => {
-    updateRankingTable(data); // Usar la nueva función para actualizar la tabla
-  })
-  .catch(error => {
-    console.error("Error al cargar el ranking:", error);
-    // Podrías mostrar un mensaje en el ranking table o en la consola
-  });
-}
-
-// Función para actualizar la tabla de ranking
-function updateRankingTable(data) {
-    const tbody = document.querySelector("#rankingTable tbody");
-    tbody.innerHTML = "";
-    data.forEach(part => {
-      const row = document.createElement("tr");
-      // Mapear los estados de los problemas y unirlos en celdas de tabla
-      const problemStatusCells = Object.keys(problemasData).map(pId => {
-          const status = part.status[pId] || ""; // Asegurarse de que el status existe
-          return `<td>${status}</td>`;
-      }).join("");
-
-      row.innerHTML = `<td>${part.name}</td>${problemStatusCells}<td>${part.score}</td><td>${part.penalty}</td>`;
-      tbody.appendChild(row);
     });
-}
 
-// Función modificada para mostrar el enunciado y renderizar MathJax
-function mostrarEnunciado() {
-    const pid = document.getElementById("problemSelect").value;
-    const enunciadoDiv = document.getElementById("enunciado");
+    // Manejar actualizaciones de configuración desde el servidor
+    socket.on('config_update', (data) => {
+        console.log("Configuración actualizada recibida:", data);
+        if (data.type === 'start_time') {
+            startTime = new Date(data.value);
+            updateTimer(); // Actualiza el timer inmediatamente
+        } else if (data.type === 'duration') {
+            durationSeconds = data.value;
+            updateTimer(); // Actualiza el timer inmediatamente
+        } else if (data.type === 'problems') {
+            // Para cambios de problemas, lo más simple es recargar la página.
+            // Una actualización dinámica sería mucho más compleja.
+            location.reload();
+        }
+    });
 
-    let newEnunciadoContent = "";
+    // Manejar actualizaciones del ranking desde el servidor
+    socket.on('ranking_update', (data) => {
+        console.log("Ranking actualizado recibido via socket:", data);
+        updateRankingTable(data); // Llama a una función dedicada para actualizar la tabla
+    });
 
-    if (window.concursoStatus === "before") {
-        newEnunciadoContent = "<em>El concurso aún no ha comenzado.</em>";
-    } else if (!problemasData[pid]) {
-        newEnunciadoContent = "<em>Problema no encontrado.</em>";
-    } else {
-        newEnunciadoContent = `
-            <div class="enunciado-container">
-                <strong>Enunciado:</strong>
-                <div id="math-content">${problemasData[pid].enunciado}</div>
-            </div>
-        `;
+
+    function login() {
+      const name = document.getElementById("loginName").value.trim();
+      const password = document.getElementById("loginPassword").value.trim();
+      const loginMsgElem = document.getElementById("loginMsg");
+
+      if (!name || !password) {
+        loginMsgElem.textContent = "Falta nombre o contraseña.";
+        loginMsgElem.className = 'message error';
+        return;
+      }
+
+      fetch("/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `name=${encodeURIComponent(name)}&password=${encodeURIComponent(password)}`
+      })
+      .then(response => {
+        if (!response.ok) { // Manejar errores HTTP
+            return response.json().then(err => Promise.reject(err));
+        }
+        return response.json();
+      })
+      .then(data => {
+        if (data.error) {
+          loginMsgElem.textContent = data.error;
+          loginMsgElem.className = 'message error';
+        } else {
+          loginMsgElem.textContent = "¡Login exitoso!";
+          loginMsgElem.className = 'message success';
+          document.getElementById("loginDiv").style.display = "none";
+          document.getElementById("mainDiv").style.display = "block";
+          document.getElementById("submitName").value = name;
+          iniciarConcurso();
+        }
+      })
+      .catch(error => {
+        console.error("Error en el login:", error);
+        loginMsgElem.textContent = error.message || "Error al intentar iniciar sesión.";
+        loginMsgElem.className = 'message error';
+      });
     }
 
-    // Solo actualiza el DOM y MathJax si el contenido del enunciado ha cambiado
-    // o si el problema seleccionado ha cambiado (esto es importante para el dropdown)
-    if (newEnunciadoContent !== currentEnunciadoHtml || pid !== currentProblemId) {
-        enunciadoDiv.innerHTML = newEnunciadoContent;
-        currentEnunciadoHtml = newEnunciadoContent; // Guarda el contenido actual
-        currentProblemId = pid; // Guarda el ID del problema actual
+    // Función de logout
+    function logout() {
+      fetch("/logout", {
+          method: "POST"
+      })
+      .then(response => response.json())
+      .then(data => {
+          if (data.message) {
+              document.getElementById("mainDiv").style.display = "none";
+              document.getElementById("loginDiv").style.display = "block";
+              document.getElementById("loginName").value = "";
+              document.getElementById("loginPassword").value = "";
+              document.getElementById("loginMsg").textContent = data.message;
+              document.getElementById("loginMsg").className = 'message success';
+          } else {
+              console.error("Error al cerrar sesión:", data.error);
+              document.getElementById("loginMsg").textContent = data.error || "Error al cerrar sesión.";
+              document.getElementById("loginMsg").className = 'message error';
+          }
+      })
+      .catch(error => {
+          console.error("Error de conexión al cerrar sesión:", error);
+          document.getElementById("loginMsg").textContent = "Error de conexión al cerrar sesión.";
+          document.getElementById("loginMsg").className = 'message error';
+      });
+    }
 
-        // Asegurar que MathJax se renderice después de que el DOM esté listo
-        // y solo si hay contenido MathJax potencial
-        const mathContentContainer = document.getElementById("math-content");
-        if (mathContentContainer && typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
-            // Usa typesetClear para limpiar y luego typesetPromise para renderizar el nuevo contenido
-            MathJax.typesetClear([mathContentContainer]); // Limpia el contenido anterior de MathJax
-            MathJax.typesetPromise([mathContentContainer]).catch(err => {
-                console.error("MathJax error:", err);
-            });
-        } else if (typeof MathJax === 'undefined') {
-            console.warn("MathJax no está cargado o no tiene typesetPromise.");
+    // Registrar evento de logout cuando el DOM esté cargado
+    document.addEventListener("DOMContentLoaded", () => {
+      // Registrar logout si el botón existe
+      const logoutButton = document.getElementById("logoutButton");
+      if (logoutButton) {
+        logoutButton.addEventListener("click", logout);
+      }
+
+      // Si el usuario ya está logueado (por ejemplo, al recargar la página), muestra el mainDiv
+      if ("{{ logged_in_user }}" !== "None") { // Chequea la variable de Jinja
+          document.getElementById("loginDiv").style.display = "none";
+          document.getElementById("mainDiv").style.display = "block";
+          document.getElementById("submitName").value = "{{ logged_in_user }}";
+          iniciarConcurso();
+      } else {
+          mostrarEnunciado(); // Mostrar enunciado inicial (puede ser "antes del concurso")
+      }
+    });
+
+    function iniciarConcurso() {
+      updateTimer(); // Primera actualización del temporizador
+      loadRanking(); // Primera carga del ranking
+      mostrarEnunciado(); // Asegurarse de que el enunciado se muestre al iniciar
+
+      // Intervalo para actualizar el temporizador cada segundo
+      setInterval(updateTimer, 1000);
+      // Intervalo para cargar el ranking cada 10 segundos
+      setInterval(loadRanking, 10000);
+    }
+
+    // Función mejorada para actualizar el temporizador
+    function updateTimer() {
+        const now = new Date();
+        const startTimeObj = new Date(startTime);
+        const endTime = new Date(startTimeObj.getTime() + durationSeconds * 1000);
+
+        const timerElem = document.getElementById("timer");
+        const form = document.getElementById("submitForm");
+        const answerInput = document.getElementById("answerInput");
+        const submitButton = form ? form.querySelector("button[type=submit]") : null;
+        const statusMsg = document.getElementById("statusMsg");
+
+        if (!timerElem || !form || !answerInput || !submitButton || !statusMsg) return;
+
+        let newConcursoStatus;
+        if (now < startTimeObj) {
+            newConcursoStatus = "before";
+            const diff = Math.floor((startTimeObj - now) / 1000);
+            timerElem.textContent = `Comienza en: ${secondsToHMS(diff)}`;
+            statusMsg.textContent = "El concurso comenzará pronto.";
+            statusMsg.className = 'status-box before';
+            answerInput.disabled = true;
+            submitButton.disabled = true;
+        } else if (now < endTime) {
+            newConcursoStatus = "running";
+            const elapsed = Math.floor((now - startTimeObj) / 1000);
+            const remaining = durationSeconds - elapsed;
+            timerElem.textContent = `⏱️ Transcurrido: ${secondsToHMS(elapsed)} | ⌛ Faltan: ${secondsToHMS(remaining)}`;
+            statusMsg.textContent = "Concurso en curso";
+            statusMsg.className = 'status-box running';
+            answerInput.disabled = false;
+            submitButton.disabled = false;
+        } else {
+            newConcursoStatus = "after";
+            timerElem.textContent = "Concurso finalizado.";
+            statusMsg.textContent = "Concurso finalizado.";
+            statusMsg.className = 'status-box after';
+            answerInput.disabled = true;
+            submitButton.disabled = true;
+        }
+
+        // Solo actualiza el estado si ha cambiado
+        if (newConcursoStatus !== window.concursoStatus) {
+            window.concursoStatus = newConcursoStatus;
+            mostrarEnunciado(); // Llama a mostrarEnunciado solo si el estado del concurso cambia
         }
     }
-}
-</script>
 
+    function secondsToHMS(s) {
+      const h = Math.floor(s/3600), m = Math.floor((s%3600)/60), sec = s%60;
+      return `${h.toString().padStart(2,"0")}:${m.toString().padStart(2,"0")}:${sec.toString().padStart(2,"0")}`;
+    }
+
+    document.getElementById("submitForm").onsubmit = e => {
+      e.preventDefault();
+      const name = document.getElementById("submitName").value.trim();
+      const pid = document.getElementById("problemSelect").value;
+      const ans = document.getElementById("answerInput").value.trim();
+      const submitMsgElem = document.getElementById("submitMsg");
+
+      // Validación básica del lado del cliente para la respuesta
+      if (ans === "") {
+          submitMsgElem.textContent = "La respuesta no puede estar vacía.";
+          submitMsgElem.className = 'message error';
+          return;
+      }
+
+      fetch("/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: `name=${encodeURIComponent(name)}&problem=${encodeURIComponent(pid)}&answer=${encodeURIComponent(ans)}`
+      })
+      .then(response => {
+        if (!response.ok) { // Manejar errores HTTP
+            return response.json().then(err => Promise.reject(err));
+        }
+        return response.json();
+      })
+      .then(data => {
+        submitMsgElem.textContent = data.message || data.error || "";
+        submitMsgElem.className = data.error ? 'message error' : 'message success'; // Añadir clase de éxito/error
+        // Limpiar el campo de respuesta después de enviar
+        document.getElementById("answerInput").value = '';
+        // El ranking se actualizará vía socketio.on('ranking_update')
+      })
+      .catch(error => {
+        console.error("Error al enviar respuesta:", error);
+        submitMsgElem.textContent = error.message || "Error al enviar la respuesta.";
+        submitMsgElem.className = 'message error';
+      });
+    };
+
+    function loadRanking() {
+      fetch("/ranking")
+      .then(response => {
+        if (!response.ok) { // Manejar errores HTTP
+            return response.json().then(err => Promise.reject(err));
+        }
+        return response.json();
+      })
+      .then(data => {
+        updateRankingTable(data); // Usar la nueva función para actualizar la tabla
+      })
+      .catch(error => {
+        console.error("Error al cargar el ranking:", error);
+        // Podrías mostrar un mensaje en el ranking table o en la consola
+      });
+    }
+
+    // Función para actualizar la tabla de ranking
+    function updateRankingTable(data) {
+        const tbody = document.querySelector("#rankingTable tbody");
+        tbody.innerHTML = "";
+        data.forEach(part => {
+          const row = document.createElement("tr");
+          // Mapear los estados de los problemas y unirlos en celdas de tabla
+          const problemStatusCells = Object.keys(problemasData).map(pId => {
+              const status = part.status[pId] || ""; // Asegurarse de que el status existe
+              return `<td>${status}</td>`;
+          }).join("");
+
+          row.innerHTML = `<td>${part.name}</td>${problemStatusCells}<td>${part.score}</td><td>${part.penalty}</td>`;
+          tbody.appendChild(row);
+        });
+    }
+
+    // Función modificada para mostrar el enunciado y renderizar MathJax
+    function mostrarEnunciado() {
+        const pid = document.getElementById("problemSelect").value;
+        const enunciadoDiv = document.getElementById("enunciado");
+
+        let newEnunciadoContent = "";
+
+        if (window.concursoStatus === "before") {
+            newEnunciadoContent = "<em>El concurso aún no ha comenzado.</em>";
+        } else if (!problemasData[pid]) {
+            newEnunciadoContent = "<em>Problema no encontrado.</em>";
+        } else {
+            newEnunciadoContent = `
+                <div class="enunciado-container">
+                    <strong>Enunciado:</strong>
+                    <div id="math-content">${problemasData[pid].enunciado}</div>
+                </div>
+            `;
+        }
+
+        // Solo actualiza el DOM y MathJax si el contenido del enunciado ha cambiado
+        // o si el problema seleccionado ha cambiado (esto es importante para el dropdown)
+        if (newEnunciadoContent !== currentEnunciadoHtml || pid !== currentProblemId) {
+            enunciadoDiv.innerHTML = newEnunciadoContent;
+            currentEnunciadoHtml = newEnunciadoContent; // Guarda el contenido actual
+            currentProblemId = pid; // Guarda el ID del problema actual
+
+            // Asegurar que MathJax se renderice después de que el DOM esté listo
+            // y solo si hay contenido MathJax potencial
+            const mathContentContainer = document.getElementById("math-content");
+            if (mathContentContainer && typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+                // Usa typesetClear para limpiar y luego typesetPromise para renderizar el nuevo contenido
+                MathJax.typesetClear([mathContentContainer]); // Limpia el contenido anterior de MathJax
+                MathJax.typesetPromise([mathContentContainer]).catch(err => {
+                    console.error("MathJax error:", err);
+                });
+            } else if (typeof MathJax === 'undefined') {
+                console.warn("MathJax no está cargado o no tiene typesetPromise.");
+            }
+        }
+    }
+  </script>
 </body>
 </html>

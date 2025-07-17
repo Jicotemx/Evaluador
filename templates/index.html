@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <script sfrc="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
+  <!-- Corrección: src en lugar de sfrc -->
+  <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Evaluador numérico 🧮</title>
@@ -22,35 +23,7 @@
       margin: 0;
       padding: 0;
     }
-    .author-logo {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    overflow: hidden;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    z-index: 1000;
-    opacity:f 0.8;
-    transition: transform 0.3s, opacity 0.3s;
-    transform-origin: center center; /* Importante para escalar desde el centro */
-    border: 2px solid white;
-    background: white;
-  }
 
-  .author-logo:hover {
-    transform: scale(0.1); /* Escala al 120% del tamaño original */
-    opacity: 1;
-  }
-
-  .author-logo img {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    padding: 5px;
-    transition: transform 0.3s; /* Transición suave para la imagen */
-  }
     body {
       background: radial-gradient(circle at top left, #1a2a6c, #0f2027, #1a2a6c);
       color: var(--color-acento);
@@ -75,7 +48,7 @@
     }
 
     .card:hover {
-      transform: scale(1.01);
+      transform: scale(0.1);
     }
 
     h1 {
@@ -213,7 +186,138 @@
         flex-direction: column;
       }
     }
+
+    /* ESTILOS CORREGIDOS PARA EL LOGO DEL AUTOR */
+    .author-logo {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      overflow: hidden;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      z-index: 1000;
+      opacity: 0.8; /* Corrección: se quitó la 'f' */
+      transition: transform 0.3s, opacity 0.3s;
+      transform-origin: center center;
+      border: 2px solid white;
+      background: white;
+    }
+
+    .author-logo:hover {
+      transform: scale(1.2); /* Corrección: de 0.1 a 1.2 (aumenta tamaño) */
+      opacity: 1;
+    }
+
+    .author-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      padding: 5px;
+    }
   </style>
+  <script>
+    MathJax = {
+      tex: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        displayMath: [['$$','$$'], ['\\[','\\]']],
+        processEscapes: true,
+        packages: {'[+]': ['ams']}
+      },
+      loader: { load: ['[tex]/ams'] },
+      startup: {
+        pageReady: () => {
+          return MathJax.startup.defaultPageReady().then(() => {
+            console.log('MathJax listo');
+          });
+        }
+      }
+    };
+  </script>
+  
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="logo">🧮</div>
+    <h1>Zin'achi</h1>
+    
+    <div id="loginDiv" class="card">
+      <h2>Acceso al Sistema</h2>
+      <div class="form-group">
+        <label for="loginName">Nombre de usuario:</label>
+        <input type="text" id="loginName" placeholder="Ingresa tu nombre">
+      </div>
+      
+      <div class="form-group">
+        <label for="loginPassword">Contraseña:</label>
+        <input type="password" id="loginPassword" placeholder="Ingresa tu contraseña">
+      </div>
+      
+      <button onclick="login()">Entrar al sistema</button>
+      <div id="loginMsg" class="message" aria-live="polite"></div>
+      
+      <hr style="margin: 20px 0; border-color: #eee;">
+      
+      <div class="admin-link">
+        <p>¿Eres administrador? <a href="/admin">Acceder al Panel de Administración</a></p> 
+      </div>
+    </div>
+
+    <div id="mainDiv" class="card" style="display:none">
+      <button id="logoutButton" class="logout-btn">Salir del sistema</button>
+      
+      <div class="flex-container">
+        <div id="statusMsg" class="status-box running" aria-live="polite" style="font-weight: bold;">Concurso en curso</div>
+        <div id="timer" class="timer" style="font-weight:bold">⏱️ Transcurrido: 00:00:00 | ⌛ Faltan: 02:00:00</div>
+      </div>
+
+      <form id="submitForm">   
+        <div class="form-group">
+          <label for="submitName">Nombre:</label>
+          <input type="text" id="submitName" readonly>
+        </div>
+        
+        <div class="form-group">
+          <label for="problemSelect">Problema:</label>
+          <select id="problemSelect" required onchange="mostrarEnunciado()">
+            {% for pid in problems %}<option value="{{ pid }}">{{ pid }}</option>{% endfor %}
+          </select>
+        </div>
+
+        <div id="enunciado" class="form-group" style="margin:1em 0; padding: 20px; background: #f8f9fa; border-radius: 8px; font-size:18px;">
+          <em>El concurso aún no ha comenzado.</em>
+        </div>
+
+        <div class="form-group">
+          <label for="answerInput">Respuesta:</label>
+          <input type="text" id="answerInput" required placeholder="Ingresa tu respuesta" pattern="[-+]?\d*\.?\d+" title="Ingrese un valor numérico">
+        </div>
+        
+        <button type="submit">Enviar respuesta</button>
+        <div id="submitMsg" class="message" aria-live="polite"></div>
+      </form>
+
+      <h3>Tabla de posiciones</h3>
+      <table id="rankingTable">
+        <thead>
+          <tr>
+            <th>Participante</th>
+            {% for pid in problems %}<th>{{ pid }}</th>{% endfor %}
+            <th>Puntos</th>
+            <th>Penalización</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- LOGO DEL AUTOR - AÑADIDO -->
+  <div class="author-logo">
+    <img src="{{ url_for('static', filename='logo.png') }}" alt="Autor del sistema">
+  </div>
  <script>
     MathJax = {
       tex: {

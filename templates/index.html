@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <!-- Corrección: src en lugar de sfrc -->
   <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,7 +16,7 @@
       --borde-radio: 12px;
       --sombra-suave: 0 10px 30px rgba(0, 0, 0, 0.2);
     }
-   
+
     * {
       box-sizing: border-box;
       margin: 0;
@@ -43,11 +42,14 @@
       box-shadow: var(--sombra-suave);
       padding: calc(var(--espaciado) * 1.5);
       margin-bottom: var(--espaciado);
-     
     }
 
+    /* Corrección: El efecto hover de la tarjeta estaba muy exagerado.
+       Se cambió 'transform: scale(0.1)' a 'transform: translateY(-5px)'.
+       También se agregó una transición suave para el efecto. */
     .card:hover {
-      transform: scale(0.1);
+      transform: translateY(-5px); /* Un ligero levantamiento es más común */
+      transition: transform 0.3s ease-in-out; /* Transición suave */
     }
 
     h1 {
@@ -78,7 +80,7 @@
       border: 2px solid #ddd;
       border-radius: var(--borde-radio);
       font-size: 16px;
-     
+      margin-bottom: 10px; /* Añadido para espacio entre inputs/botones */
     }
 
     input:focus, select:focus {
@@ -93,7 +95,8 @@
       font-weight: 600;
       border: none;
       margin-top: 10px;
-      
+      cursor: pointer; /* Añadido para indicar que es clickeable */
+      transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; /* Transición para hover */
     }
 
     button:hover {
@@ -197,15 +200,16 @@
       overflow: hidden;
       box-shadow: 0 4px 8px rgba(0,0,0,0.2);
       z-index: 1000;
-      opacity: 0.8; /* Corrección: se quitó la 'f' */
-      
+      opacity: 0.8; /* Corrección: se quitó la 'f' extra */
+
       transform-origin: center center;
       border: 2px solid white;
       background: white;
+      transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out; /* Añadida transición */
     }
 
     .author-logo:hover {
-      transform: scale(0.1); /* Corrección: de 0.1 a 1.2 (aumenta tamaño) */
+      transform: scale(1.2); /* Corrección: de 0.1 a 1.2 (aumenta tamaño) para ser más visible */
       opacity: 1;
     }
 
@@ -213,9 +217,10 @@
       width: 100%;
       height: 100%;
       object-fit: contain;
-      padding: 5px;
+      padding: 5px; /* Un pequeño padding para que la imagen no toque los bordes */
     }
   </style>
+</head>
   <script>
     MathJax = {
       tex: {

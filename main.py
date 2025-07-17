@@ -15,6 +15,7 @@ import pytz
 import re
 from io import StringIO
 import logging # Para logging más robusto
+import threading
 
 # Configurar logging básico
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -109,6 +110,19 @@ def get_status():
             #pass # La bandera de informe_subido se controla en la función enviar_resultado por la ruta
         return "after"
     return "running"
+
+def verificar_estado():
+    global informe_subido
+    now = datetime.now(LOCAL_TIMEZONE)
+    end_time = START_TIME + DURATION
+    print(f"Verificando a las {now.strftime('%H:%M:%S')}")
+    if now > end_time and not informe_subido:
+        enviar_resultado_route()
+        informe_subido = True
+    else:
+        # Repite la verificación en 5 segundos
+        threading.Timer(5, verificar_estado).start()
+
 
 def get_elapsed_time():
     now = datetime.now(LOCAL_TIMEZONE)
@@ -365,8 +379,7 @@ def ejecutar_accion():
             
             problems = new_problems
             mensajes.append(f"Problemas recargados: {list(problems.keys())}")
-            cambios_realizados = True
-            informe_subido = False # Resetear la bandera si se recargan los problemas
+            cambios_realizados = True           
 
             # Reevaluar todos los envíos con las nuevas definiciones de problemas
             reevaluar_todos()
@@ -516,8 +529,9 @@ if __name__ == "__main__":
     # use eventlet para manejar la concurrencia de forma asíncrona.
     # Si no lo haces, por defecto usará el threading de Python.
     # Para despliegues de producción, Gunicorn con Eventlet workers es común.
+    verificar_estado()
     eventlet.monkey_patch() # Parchear librerías estándar para que sean compatibles con eventlet
-
+    
     if not problems:
         logging.critical("No se pudieron cargar los problemas. La aplicación puede no funcionar como se espera.")
 

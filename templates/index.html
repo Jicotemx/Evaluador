@@ -44,9 +44,7 @@
       margin-bottom: var(--espaciado);
     }
 
-    /* Corrección: El efecto hover de la tarjeta estaba muy exagerado.
-       Se cambió 'transform: scale(0.1)' a 'transform: translateY(-5px)'.
-       También se agregó una transición suave para el efecto. */
+   
     .card:hover {
       transform: translateY(-5px); /* Un ligero levantamiento es más común */
       transition: transform 0.3s ease-in-out; /* Transición suave */
@@ -209,7 +207,7 @@
     }
 
     .author-logo:hover {
-      transform: scale(1.2); /* Corrección: de 0.1 a 1.2 (aumenta tamaño) para ser más visible */
+      transform: scale(0.1); 
       opacity: 1;
     }
 

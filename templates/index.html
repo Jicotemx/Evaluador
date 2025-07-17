@@ -23,26 +23,34 @@
       padding: 0;
     }
     .author-logo {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  width: 30px; /* Tamaño deseado */
-  height: 60px;
-  border-radius: 50%;
-  overflow: hidden;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-  z-index: 1000; /* Para que esté por encima de otros elementos */
-  opacity: 0.8; /* Leve transparencia */
-  transition: opacity 0.3s;
-}
-.author-logo:hover {
-  opacity: 1;
-}
-.author-logo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    z-index: 1000;
+    opacity: 0.8;
+    transition: transform 0.3s, opacity 0.3s;
+    transform-origin: center center; /* Importante para escalar desde el centro */
+    border: 2px solid white;
+    background: white;
+  }
+
+  .author-logo:hover {
+    transform: scale(0.14); /* Escala al 120% del tamaño original */
+    opacity: 1;
+  }
+
+  .author-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 5px;
+    transition: transform 0.3s; /* Transición suave para la imagen */
+  }
     body {
       background: radial-gradient(circle at top left, #1a2a6c, #0f2027, #1a2a6c);
       color: var(--color-acento);

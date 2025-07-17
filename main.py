@@ -98,16 +98,7 @@ def get_status():
 
     if now < START_TIME:
         return "before"
-    elif now > end_time:
-        # Esto asegura que el envío solo ocurra una vez al finalizar.
-        # Podrías querer que un admin lo fuerce manualmente después.
-        if not informe_subido:            
-            enviar_resultado_route()            
-            informe_subido=True
-            # Asegúrate de no llamar a enviar_resultado aquí si es una ruta Flask
-            # La ruta /enviar_resultado puede ser llamada por un admin o un proceso cron
-            # Aquí solo cambiamos el estado y la bandera.
-            #pass # La bandera de informe_subido se controla en la función enviar_resultado por la ruta
+    elif now > end_time:       
         return "after"
     return "running"
 
@@ -514,8 +505,6 @@ def enviar_resultado_route():
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
             smtp.login("odavalos@up.edu.mx", smtp_password)
             smtp.send_message(msg)
-        
-        informe_subido = True
         logging.info("Correo de resultados enviado con éxito.")
         return "Correo enviado con éxito", 200
     

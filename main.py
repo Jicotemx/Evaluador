@@ -101,6 +101,9 @@ def get_status():
         # Esto asegura que el envío solo ocurra una vez al finalizar.
         # Podrías querer que un admin lo fuerce manualmente después.
         if not informe_subido:
+            
+            enviar_resultado_route():
+            informe_subido=True
             # Asegúrate de no llamar a enviar_resultado aquí si es una ruta Flask
             # La ruta /enviar_resultado puede ser llamada por un admin o un proceso cron
             # Aquí solo cambiamos el estado y la bandera.

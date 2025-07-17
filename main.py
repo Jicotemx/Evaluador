@@ -160,9 +160,11 @@ def califica(name,pid, elapsed,answer,problem_correct_answer):
            try:
               a = int(partes[0])
               b = int(partes[1])
-              sepuede=a/b 
-              correct_val = float(problem_correct_answer)
-              correct = abs(sepuede - correct_val) < 1e-6
+              if b!=0: 
+                 correct_val = float(problem_correct_answer)
+                 correct = abs(sepuede - correct_val) < 1e-6
+              else:
+                 correct=false    
            except ValueError:
               # Si no son numéricas o la conversión falla, compara como cadenas
               correct = answer.lower() == str(problem_correct_answer).lower() # Comparación insensible a mayúsculas    

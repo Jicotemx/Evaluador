@@ -162,7 +162,7 @@ def califica(name,pid, elapsed,answer,problem_correct_answer):
               b = int(partes[1])
               if b!=0: 
                  correct_val = float(problem_correct_answer)
-                 correct = abs(sepuede - correct_val) < 1e-6
+                 correct = abs(a/b - correct_val) < 1e-6
               else:
                  correct=false    
            except ValueError:

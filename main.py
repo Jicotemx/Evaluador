@@ -477,7 +477,7 @@ def index():
 
 @app.route('/enviar_resultado')
 def enviar_resultado_route():
-    global informe_subido
+    global informe_subido, historial_envios, participants
     now = datetime.now(LOCAL_TIMEZONE)
     end_time = START_TIME + DURATION
     

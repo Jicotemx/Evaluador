@@ -7,6 +7,66 @@
   <title>Evaluador numérico 🧮</title>
   <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
+    /* ... estilos existentes ... */
+
+    /* Nuevos estilos para el modal de instrucciones */
+    .info-icon {
+      cursor: pointer;
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      text-align: center;
+      line-height: 20px;
+      border-radius: 50%;
+      background: var(--color-primario);
+      color: white;
+      font-size: 14px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 2000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.5);
+    }
+
+    .modal-content {
+      background-color: white;
+      margin: 15% auto;
+      padding: 30px;
+      border-radius: var(--borde-radio);
+      box-shadow: var(--sombra-suave);
+      width: 90%;
+      max-width: 600px;
+      position: relative;
+      animation: modalopen 0.4s;
+    }
+
+    @keyframes modalopen {
+      from {opacity: 0; transform: translateY(-60px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+    }
+
+    .close:hover,
+    .close:focus {
+      color: black;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
     :root {
       --color-primario: #4facfe;
       --color-secundario: #00f2fe;
@@ -271,9 +331,12 @@
         </div>
 
         <div class="form-group">
-          <label for="answerInput">Respuesta:</label>
-          <input type="text" id="answerInput" required placeholder="Ingresa tu respuesta" pattern="[-+]?\d*\.?\d+" title="Ingrese un valor numérico">
-        </div>
+       <label for="answerInput">Respuesta: 
+      <  span class="info-icon" onclick="mostrarInstrucciones()">?</span>
+       </label>
+    <input type="text" id="answerInput" required placeholder="Ingresa tu respuesta" pattern="[-+]?\d*\.?\d+(\s*\/\s*\d+)?">
+  </div>
+
 
         <button type="submit">Enviar respuesta</button>
         <div id="submitMsg" class="message" aria-live="polite"></div>
@@ -637,5 +700,48 @@
         }
     }
   </script>
+
+ <!-- Modal de instrucciones (añadir al final del body) -->
+  <div id="instruccionesModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="cerrarModal()">&times;</span>
+      <h3>Instrucciones para la respuesta</h3>
+      <p><strong>Formato de respuesta:</strong></p>
+      <ul>
+        <li>Se aceptan números decimales (ej: 3.1416) o fracciones (ej: 22/7)</li>
+        <li>La respuesta será considerada correcta si difiere de la respuesta exacta en menos de 1e-6 (0.000001)</li>
+        <li>En el caso de fracciones, se evaluará el valor numérico de la fracción</li>
+        <li>Ejemplos válidos: 3.14, -2.5, 1/3, -5/2, 0.0000001</li>
+      </ul>
+      <p>El sistema calculará automáticamente el valor numérico de tu respuesta y lo comparará con la solución exacta.</p>
+    </div>
+  </div>
+
+   <script>
+    // ... código existente ...
+    
+    // Nuevas funciones para el modal
+    function mostrarInstrucciones() {
+      document.getElementById('instruccionesModal').style.display = 'block';
+    }
+
+    function cerrarModal() {
+      document.getElementById('instruccionesModal').style.display = 'none';
+    }
+
+    // Cerrar el modal si se hace clic fuera del contenido
+    window.onclick = function(event) {
+      const modal = document.getElementById('instruccionesModal');
+      if (event.target === modal) {
+        cerrarModal();
+      }
+    }
+    
+    // Actualizar el patrón de validación para aceptar fracciones
+    document.getElementById('answerInput').pattern = "[-+]?\\d*\\.?\\d+(\\s*\\/\\s*\\d+)?";
+  </script>
+
+
+  
 </body>
 </html>

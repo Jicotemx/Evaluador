@@ -330,13 +330,13 @@
           <em>El concurso aún no ha comenzado.</em>
         </div>
 
-        <div class="form-group">
-       <label for="answerInput">Respuesta: 
-      <  span class="info-icon" onclick="mostrarInstrucciones()">?</span>
-       </label>
-    <input type="text" id="answerInput" required placeholder="Ingresa tu respuesta" pattern="[-+]?\d*\.?\d+(\s*\/\s*\d+)?">
-  </div>
-
+     <div class="form-group">
+         <div class="info-container">
+            <label for="answerInput">Respuesta:</label>
+            <div class="info-icon" onclick="mostrarInstrucciones()">?</div>
+         </div>
+        <input type="text" id="answerInput" required placeholder="Ingresa tu respuesta" pattern="[-+]?\d*\.?\d+(\s*\/\s*\d+)?">
+     </div>
 
         <button type="submit">Enviar respuesta</button>
         <div id="submitMsg" class="message" aria-live="polite"></div>
